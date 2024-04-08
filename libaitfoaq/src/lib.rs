@@ -1,6 +1,9 @@
 pub mod events;
 pub mod state;
 
+#[cfg(test)]
+mod test_state_machine;
+
 use events::Event;
 use state::*;
 
@@ -9,6 +12,7 @@ pub struct Game {
     phase: GamePhase,
     board: Board,
     contestants: Vec<Contestant>,
+    options: Options,
 }
 
 impl Game {
@@ -19,6 +23,7 @@ impl Game {
                 categories: Vec::new(),
             },
             contestants: Vec::with_capacity(4),
+            options: Options::default(),
         }
     }
 
@@ -46,6 +51,7 @@ impl Game {
                 .collect(),
             board: self.board.clone(),
             phase: self.phase.clone(),
+            options: self.options.clone(),
         }
     }
 
@@ -53,7 +59,6 @@ impl Game {
         if !matches!(&self.phase, GamePhase::Preparing) {
             return Err(Error::WrongPhase {
                 is: self.phase.clone(),
-                allowed: vec![GamePhase::Preparing],
             });
         }
         self.board = board;
@@ -64,7 +69,6 @@ impl Game {
         if !matches!(&self.phase, GamePhase::Preparing) {
             return Err(Error::WrongPhase {
                 is: self.phase.clone(),
-                allowed: vec![GamePhase::Preparing],
             });
         }
         self.phase = GamePhase::Connecting;
@@ -75,7 +79,6 @@ impl Game {
         if !matches!(&self.phase, GamePhase::Connecting) {
             return Err(Error::WrongPhase {
                 is: self.phase.clone(),
-                allowed: vec![GamePhase::Connecting],
             });
         }
         self.contestants.push(Contestant {
@@ -100,8 +103,10 @@ impl Game {
         if !matches!(&self.phase, GamePhase::Connecting) {
             return Err(Error::WrongPhase {
                 is: self.phase.clone(),
-                allowed: vec![GamePhase::Connecting],
             });
+        }
+        if self.contestants.is_empty() && !self.options.allow_game_without_contestant {
+            return Err(Error::NoContestants);
         }
         self.phase = GamePhase::Picking;
         Ok(())
@@ -116,11 +121,10 @@ impl Default for Game {
 
 #[derive(Debug)]
 pub enum Error {
-    WrongPhase {
-        is: GamePhase,
-        allowed: Vec<GamePhase>,
-    },
+    WrongPhase { is: GamePhase },
     ContestantNotFound,
+    NoContestants,
+    QuestionNotFound,
 }
 
 #[cfg(test)]

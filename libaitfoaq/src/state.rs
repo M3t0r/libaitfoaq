@@ -10,6 +10,7 @@ pub struct GameState {
     pub indicated_contestants: Vec<usize>,
     pub board: Board,
     pub phase: GamePhase,
+    pub options: Options,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -94,4 +95,18 @@ pub enum GamePhase {
     /// which contestant answerd the question correctly, or something
     /// completely different.
     Score,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+pub struct Options {
+    pub allow_game_without_contestant: bool,
+    // pub multiple_attempts: bool, allow contestants to buzz in again after providing a wrong answer
+    // pub wrong_answer_penalty: bool, deduct points on wrong anwsers
+    // pub wait_for_clue: bool, wait for the clue to be finished reading/playing once before opening up for buzzing
+}
+
+impl Default for Options {
+    fn default() -> Self {
+        Options { allow_game_without_contestant: false }
+    }
 }

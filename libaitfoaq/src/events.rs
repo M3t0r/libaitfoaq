@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::state::Board;
+use crate::state::{Board, Points};
 #[cfg(doc)]
 use crate::state::{Contestant, GamePhase, GameState};
 
@@ -20,9 +20,12 @@ use crate::state::{Contestant, GamePhase, GameState};
 ///        optional_waging --> Waging: if can_wager == true
 ///        Waging --> Prompt: SetWage
 ///        Prompt --> Buzzing: PromptFullyShown
+///        Prompt --> next_or_end: FinishQuestion
 ///        Buzzing --> Buzzed: Buzz
+///        Buzzing --> next_or_end: FinishQuestion
 ///        Buzzed --> Prompt: RejectAnswer
 ///        Buzzed --> Resolution: AcceptAnswer
+///        Buzzed --> Resolution: FinishQuestion
 ///        Resolution --> next_or_end: FinishQuestion
 ///        next_or_end --> Score: if questions_left <= 0
 ///        next_or_end --> Picking: if questions_left > 0
@@ -61,11 +64,11 @@ pub enum Event {
     /// [GamePhase::Prompt] depending on
     /// [Question::can_wager](crate::state::Question::can_wager) of the picked
     /// question.
-    Pick,
+    Pick{category_index: usize, question_index: usize},
 
     /// Transition from [GamePhase::Waging] to [GamePhase::Prompt].
     /// A [Contestant] waging some of their [Points](crate::state::Points).
-    SetWage,
+    SetWage{points: Points},
 
     /// Transition from [GamePhase::Prompt] to [GamePhase::Buzzing]. During
     /// [GamePhase::Prompt] [Contestants](Contestant) can't buzz in so everyone
@@ -75,7 +78,7 @@ pub enum Event {
 
     /// A [Contestant] buzzing in. Transtion from [GamePhase::Buzzing] to
     /// [GamePhase::Buzzed]
-    Buzz,
+    Buzz{contestant_index: usize},
 
     /// Transition from [GamePhase::Buzzed] to [GamePhase::Resolution].
     AcceptAnswer,
@@ -85,6 +88,8 @@ pub enum Event {
     /// Reveal the moderator hint to the contestants in [GamePhase::Resolution]
     RevealHint,
     /// Transition from [GamePhase::Resolution] to [GamePhase::Score] or back to
-    /// [GamePhase::Picking].
+    /// [GamePhase::Picking]. Can also be used to skip answering a prompt from
+    /// [GamePhase::Prompt], [GamePhase::Buzzing], or [GamePhase::Buzzed] without
+    /// awarding/changing points.
     FinishQuestion,
 }

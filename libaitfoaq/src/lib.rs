@@ -12,7 +12,7 @@ pub struct Game {
     phase: GamePhase,
     board: Board,
     contestants: Vec<Contestant>,
-    indications: Vec<usize>,
+    indications: Vec<ContestantHandle>,
     options: Options,
 }
 
@@ -36,9 +36,9 @@ impl Game {
             Event::ConnectContestant { name_hint } => self.connect_contestant(name_hint)?,
             Event::NameContestant { index, name } => self.name_contestant(index, name)?,
             Event::StartGame => self.start_game()?,
-            Event::Pick { category_index, clue_index } =>  self.pick(category_index, clue_index)?,
+            Event::Pick { clue } => self.pick(clue)?,
             Event::ClueFullyShown => self.clue_fully_shown()?,
-            Event::Buzz { contestant_index } => self.buzz(contestant_index)?,
+            Event::Buzz { contestant } => self.buzz(contestant)?,
             Event::SetWage { points } => self.set_wage(points)?,
             Event::AcceptAnswer => self.accept_answer()?,
             Event::RejectAnswer => self.reject_answer()?,
@@ -122,40 +122,47 @@ impl Game {
         Ok(())
     }
 
-    fn pick(&mut self, category_index: usize, clue_index: usize) -> Result<(), Error> {
+    fn pick(&mut self, clue_handle: ClueHandle) -> Result<(), Error> {
         if !matches!(&self.phase, GamePhase::Picking) {
             return Err(Error::WrongPhase {
                 is: self.phase.clone(),
             });
         }
-        let clue = self.board
-            .categories.get(category_index).ok_or(Error::ClueNotFound)?
-            .clues.get(clue_index).ok_or(Error::ClueNotFound)?
+        let (category_index, clue_index) = clue_handle;
+        let clue = self
+            .board
+            .categories
+            .get(category_index)
+            .ok_or(Error::ClueNotFound)?
+            .clues
+            .get(clue_index)
+            .ok_or(Error::ClueNotFound)?
             .clone();
-        self.phase = GamePhase::Clue{clue};
+        // let exclusive = if clue.exclusive { todo!() } else { None };
+        // self.phase = GamePhase::Clue{clue, exclusive};
+        self.phase = GamePhase::Clue { clue: clue_handle };
         Ok(())
     }
 
     fn clue_fully_shown(&mut self) -> Result<(), Error> {
-        let clue = match &self.phase {
-            GamePhase::Clue { clue } => Ok(clue.clone()),
+        let clue = match self.phase {
+            GamePhase::Clue { clue } => Ok(clue),
             _ => Err(Error::WrongPhase {
                 is: self.phase.clone(),
-            })
+            }),
         }?;
-        self.phase = GamePhase::Buzzing{clue};
+        self.phase = GamePhase::Buzzing { clue };
         Ok(())
     }
 
     fn buzz(&mut self, contestant_index: usize) -> Result<(), Error> {
-        match &mut self.phase {
+        match self.phase {
             // allow buzzing in the buzzing phase
             GamePhase::Buzzing { clue } => {
-                let clue = clue.clone();
                 self.indicate_contestant(contestant_index)?;
-                self.phase = GamePhase::Buzzed{clue};
+                self.phase = GamePhase::Buzzed { clue };
                 Ok(())
-            },
+            }
             // allow toggling the indication lights in the lobby or while picking
             GamePhase::Connecting | GamePhase::Picking => {
                 if let Some(i) = self.indications.iter().position(|c| c == &contestant_index) {
@@ -168,17 +175,16 @@ impl Game {
                     self.indicate_contestant(contestant_index)?;
                 }
                 Ok(())
-            },
+            }
             _ => Err(Error::WrongPhase {
                 is: self.phase.clone(),
-            })
+            }),
         }
     }
 
     fn set_wage(&mut self, points: Points) -> Result<(), Error> {
-        match &mut self.phase {
+        match self.phase {
             GamePhase::Waging { clue } => {
-                let clue = clue.clone();
                 self.phase = GamePhase::Clue { clue };
                 Ok(())
             }
@@ -189,9 +195,8 @@ impl Game {
     }
 
     fn accept_answer(&mut self) -> Result<(), Error> {
-        match &mut self.phase {
+        match self.phase {
             GamePhase::Buzzed { clue } => {
-                let clue = clue.clone();
                 self.phase = GamePhase::Resolution { clue };
                 Ok(())
             }
@@ -202,9 +207,8 @@ impl Game {
     }
 
     fn reject_answer(&mut self) -> Result<(), Error> {
-        match &mut self.phase {
+        match self.phase {
             GamePhase::Buzzed { clue } => {
-                let clue = clue.clone();
                 self.phase = GamePhase::Buzzing { clue };
                 Ok(())
             }
@@ -224,28 +228,43 @@ impl Game {
     }
 
     fn finish_clue(&mut self) -> Result<(), Error> {
-        match &mut self.phase {
-            GamePhase::Resolution { .. } => {
-                if self.board.categories.iter().all(|c| c.clues.is_empty()) {
-                    self.phase = GamePhase::Score;
-                } else {
-                    self.phase = GamePhase::Picking;
-                }
-                Ok(())
+        let (phase, clue) = match self.phase {
+            GamePhase::Clue { clue } => (None, clue),
+            GamePhase::Buzzing { clue } => (None, clue),
+            GamePhase::Buzzed { clue } => (Some(GamePhase::Resolution { clue }), clue),
+            GamePhase::Resolution { clue } => (None, clue),
+            _ => {
+                return Err(Error::WrongPhase {
+                    is: self.phase.clone(),
+                })
             }
-            _ => Err(Error::WrongPhase {
-                is: self.phase.clone(),
-            }),
+        };
+        self.board.mark_solved(clue)?;
+        self.phase = phase.unwrap_or(self.next_or_end());
+        Ok(())
+    }
+
+    fn next_or_end(&mut self) -> GamePhase {
+        if self
+            .board
+            .categories
+            .iter()
+            .flat_map(|c| c.clues.iter())
+            .all(|c| c.solved)
+        {
+            GamePhase::Score
+        } else {
+            GamePhase::Picking
         }
     }
 
-    fn indicate_contestant(&mut self, contestant_index: usize) -> Result<(), Error> {
+    fn indicate_contestant(&mut self, contestant: ContestantHandle) -> Result<(), Error> {
         self.contestants
-            .get_mut(contestant_index)
+            .get_mut(contestant)
             .ok_or(Error::ContestantNotFound)?
             .indicate = true;
-        if !self.indications.contains(&contestant_index) {
-            self.indications.push(contestant_index);
+        if !self.indications.contains(&contestant) {
+            self.indications.push(contestant);
         }
         Ok(())
     }
@@ -271,11 +290,11 @@ mod tests {
 
     fn get_test_board(cs: usize, qs: usize) -> Board {
         Board {
-            categories: (1..cs)
+            categories: (1..(cs + 1))
                 .into_iter()
                 .map(|c| Category {
                     title: format!("Category {}", c),
-                    clues: (1..qs)
+                    clues: (1..(qs + 1))
                         .into_iter()
                         .map(|q| Clue {
                             clue: format!("clue {}", q),
@@ -284,6 +303,7 @@ mod tests {
                             points: 100 * q as Points,
                             can_wager: q == 4 && c == 2,
                             exclusive: q == 4 && c == 2,
+                            solved: false,
                         })
                         .collect(),
                 })
@@ -294,8 +314,9 @@ mod tests {
     #[test]
     fn it_works() {
         let g = Game::default();
+        let mut test_board = get_test_board(2, 2);
         let r = vec![
-            Event::LoadBoard(get_test_board(2, 2)),
+            Event::LoadBoard(test_board.clone()),
             Event::OpenLobby,
             Event::ConnectContestant {
                 name_hint: "test_contestant_hint".to_owned(),
@@ -305,36 +326,47 @@ mod tests {
                 name: "Test Contestant".to_owned(),
             },
             Event::StartGame,
-            Event::Pick{category_index: 0, clue_index: 0},
+            Event::Pick { clue: (0, 0) },
             Event::ClueFullyShown,
-            Event::Buzz{contestant_index: 0},
+            Event::Buzz { contestant: 0 },
             Event::RejectAnswer,
             Event::FinishClue,
-            Event::Pick { category_index: 0, clue_index: 1 },
+            Event::Pick { clue: (0, 1) },
             Event::ClueFullyShown,
-            Event::Buzz{contestant_index: 0},
+            Event::Buzz { contestant: 0 },
             Event::AcceptAnswer,
             Event::FinishClue,
-            Event::Pick { category_index: 1, clue_index: 0 },
+            Event::Pick { clue: (1, 0) },
             Event::ClueFullyShown,
-            Event::Buzz{contestant_index: 0},
+            Event::Buzz { contestant: 0 },
             Event::AcceptAnswer,
             Event::FinishClue,
-            Event::Pick { category_index: 1, clue_index: 1 },
+            Event::Pick { clue: (1, 1) },
             Event::ClueFullyShown,
-            Event::Buzz{contestant_index: 0},
+            Event::Buzz { contestant: 0 },
             Event::AcceptAnswer,
             Event::FinishClue,
         ]
         .into_iter()
         .fold(g, |mut g, e| {
-            g.apply(e.clone()).expect(format!("could not apply event {:?}", e).as_str());
+            g.apply(e.clone())
+                .expect(format!("could not apply event {:?}", e).as_str());
             g
         });
-        assert_eq!(r.board, get_test_board(2, 2));
+
+        // mark all clues as solved in our comparison
+        for clue in test_board
+            .categories
+            .iter_mut()
+            .flat_map(|c| c.clues.iter_mut())
+        {
+            clue.solved = true;
+        }
+
+        assert_eq!(r.board, test_board);
         assert_eq!(r.contestants.len(), 1);
         assert_eq!(r.contestants[0].name, Some("Test Contestant".to_owned()));
         // assert_eq!(r.contestants[0].points, 10 as Points);
-        // assert!(matches!(r.phase, GamePhase::Score));
+        assert!(matches!(r.phase, GamePhase::Score));
     }
 }

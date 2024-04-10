@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::state::{Board, Points};
+use crate::state::{Board, ClueHandle, ContestantHandle, Points};
 #[cfg(doc)]
 use crate::state::{Contestant, GamePhase, GameState};
 
@@ -63,11 +63,11 @@ pub enum Event {
     /// Transition from [GamePhase::Picking] to [GamePhase::Waging] or
     /// [GamePhase::Clue] depending on
     /// [Clue::can_wager](crate::state::Clue::can_wager) of the picked clue.
-    Pick{category_index: usize, clue_index: usize},
+    Pick { clue: ClueHandle },
 
     /// Transition from [GamePhase::Waging] to [GamePhase::Clue].
     /// A [Contestant] waging some of their [Points].
-    SetWage{points: Points},
+    SetWage { points: Points },
 
     /// Transition from [GamePhase::Clue] to [GamePhase::Buzzing]. During
     /// [GamePhase::Clue] [Contestants](Contestant) can't buzz in so everyone
@@ -77,7 +77,7 @@ pub enum Event {
 
     /// A [Contestant] buzzing in. Transtion from [GamePhase::Buzzing] to
     /// [GamePhase::Buzzed]
-    Buzz{contestant_index: usize},
+    Buzz { contestant: ContestantHandle },
 
     /// Transition from [GamePhase::Buzzed] to [GamePhase::Resolution].
     AcceptAnswer,

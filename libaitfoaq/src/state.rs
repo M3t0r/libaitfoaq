@@ -1,13 +1,15 @@
 use serde::{Deserialize, Serialize};
 
 pub type Points = i32; // JS is limited to 32bit
+pub type ContestantHandle = usize;
+pub type ClueHandle = (usize, usize);
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct GameState {
     pub contestants: Vec<Contestant>,
     /// The indexes of indicated contestants in [contestants](GameState::contestants). Ordered by the
     /// time they buzzed in, oldest first.
-    pub indicated_contestants: Vec<usize>,
+    pub indicated_contestants: Vec<ContestantHandle>,
     pub board: Board,
     pub phase: GamePhase,
     pub options: Options,
@@ -16,6 +18,19 @@ pub struct GameState {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct Board {
     pub categories: Vec<Category>,
+}
+
+impl Board {
+    pub fn mark_solved(&mut self, clue: ClueHandle) -> Result<(), super::Error> {
+        self.categories
+            .get_mut(clue.0)
+            .ok_or(super::Error::ClueNotFound)?
+            .clues
+            .get_mut(clue.1)
+            .ok_or(super::Error::ClueNotFound)?
+            .solved = true;
+        Ok(())
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
@@ -43,6 +58,8 @@ pub struct Clue {
     /// get's opened up to all contestants. True for example for a Daily Double
     /// clue.
     pub exclusive: bool,
+    /// If this clue was already played.
+    pub solved: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
@@ -79,17 +96,18 @@ pub enum GamePhase {
     /// Contestants picking a question from the board
     Picking,
     /// Betting points before seeing the clue
-    Waging{clue: Clue},
+    Waging { clue: ClueHandle },
     /// The clue/prompt is shown or played to the contestants
-    Clue{clue: Clue},
+    // Clue{clue: Clue, exclusive: Option<Contestant>},
+    Clue { clue: ClueHandle },
     /// The clue is still visible, but contestants can buzz in now. Can be
     /// skipped e.g. for daily double questions.
-    Buzzing{clue: Clue},
+    Buzzing { clue: ClueHandle },
     /// The indicated contestant ([Contestant::indicate]) buzzed in and
     /// can attempt to answer the clue
-    Buzzed{clue: Clue},
+    Buzzed { clue: ClueHandle },
     /// A correct answer was provided or all contestants failed
-    Resolution{clue: Clue},
+    Resolution { clue: ClueHandle },
     /// After all clues are played the final score is shown. Either just
     /// all players with their points, or a representation of the board showing
     /// which contestant answerd the question correctly, or something
@@ -108,6 +126,8 @@ pub struct Options {
 
 impl Default for Options {
     fn default() -> Self {
-        Options { allow_game_without_contestant: false }
+        Options {
+            allow_game_without_contestant: false,
+        }
     }
 }

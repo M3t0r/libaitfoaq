@@ -1,8 +1,8 @@
 use proptest::prelude::*;
 
-use crate::*;
 use crate::events::*;
 use crate::state::*;
+use crate::*;
 
 prop_compose! {
     fn arb_clue()(
@@ -13,7 +13,7 @@ prop_compose! {
         w in prop::bool::weighted(0.1),
         e in prop::bool::weighted(0.1),
     ) -> Clue {
-        Clue { clue: c, response: a, hint: h, points: p, can_wager: w, exclusive: e }
+        Clue { clue: c, response: a, hint: h, points: p, can_wager: w, exclusive: e, solved: false }
     }
 }
 prop_compose! {

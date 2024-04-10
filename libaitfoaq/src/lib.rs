@@ -39,6 +39,11 @@ impl Game {
             Event::Pick { category_index, clue_index } =>  self.pick(category_index, clue_index)?,
             Event::ClueFullyShown => self.clue_fully_shown()?,
             Event::Buzz { contestant_index } => self.buzz(contestant_index)?,
+            Event::SetWage { points } => self.set_wage(points)?,
+            Event::AcceptAnswer => self.accept_answer()?,
+            Event::RejectAnswer => self.reject_answer()?,
+            Event::RevealHint => self.reveal_hint()?,
+            Event::FinishClue => self.finish_clue()?,
             _ => todo!(),
         }
         Ok(self.build_game_state())
@@ -170,6 +175,70 @@ impl Game {
         }
     }
 
+    fn set_wage(&mut self, points: Points) -> Result<(), Error> {
+        match &mut self.phase {
+            GamePhase::Waging { clue } => {
+                let clue = clue.clone();
+                self.phase = GamePhase::Clue { clue };
+                Ok(())
+            }
+            _ => Err(Error::WrongPhase {
+                is: self.phase.clone(),
+            }),
+        }
+    }
+
+    fn accept_answer(&mut self) -> Result<(), Error> {
+        match &mut self.phase {
+            GamePhase::Buzzed { clue } => {
+                let clue = clue.clone();
+                self.phase = GamePhase::Resolution { clue };
+                Ok(())
+            }
+            _ => Err(Error::WrongPhase {
+                is: self.phase.clone(),
+            }),
+        }
+    }
+
+    fn reject_answer(&mut self) -> Result<(), Error> {
+        match &mut self.phase {
+            GamePhase::Buzzed { clue } => {
+                let clue = clue.clone();
+                self.phase = GamePhase::Buzzing { clue };
+                Ok(())
+            }
+            _ => Err(Error::WrongPhase {
+                is: self.phase.clone(),
+            }),
+        }
+    }
+
+    fn reveal_hint(&mut self) -> Result<(), Error> {
+        if !matches!(&self.phase, GamePhase::Resolution { .. }) {
+            return Err(Error::WrongPhase {
+                is: self.phase.clone(),
+            });
+        }
+        Ok(())
+    }
+
+    fn finish_clue(&mut self) -> Result<(), Error> {
+        match &mut self.phase {
+            GamePhase::Resolution { .. } => {
+                if self.board.categories.iter().all(|c| c.clues.is_empty()) {
+                    self.phase = GamePhase::Score;
+                } else {
+                    self.phase = GamePhase::Picking;
+                }
+                Ok(())
+            }
+            _ => Err(Error::WrongPhase {
+                is: self.phase.clone(),
+            }),
+        }
+    }
+
     fn indicate_contestant(&mut self, contestant_index: usize) -> Result<(), Error> {
         self.contestants
             .get_mut(contestant_index)
@@ -239,23 +308,23 @@ mod tests {
             Event::Pick{category_index: 0, clue_index: 0},
             Event::ClueFullyShown,
             Event::Buzz{contestant_index: 0},
-            // Event::RejectAnswer,
-            // Event::FinishQuestion,
-            // Event::Pick { category_index: 0, question_index: 1 },
-            // Event::PromptFullyShown,
-            // Event::Buzz{contestant_index: 0},
-            // Event::AcceptAnswer,
-            // Event::FinishQuestion,
-            // Event::Pick { category_index: 1, question_index: 0 },
-            // Event::PromptFullyShown,
-            // Event::Buzz{contestant_index: 0},
-            // Event::AcceptAnswer,
-            // Event::FinishQuestion,
-            // Event::Pick { category_index: 1, question_index: 1 },
-            // Event::PromptFullyShown,
-            // Event::Buzz{contestant_index: 0},
-            // Event::AcceptAnswer,
-            // Event::FinishClue,
+            Event::RejectAnswer,
+            Event::FinishClue,
+            Event::Pick { category_index: 0, clue_index: 1 },
+            Event::ClueFullyShown,
+            Event::Buzz{contestant_index: 0},
+            Event::AcceptAnswer,
+            Event::FinishClue,
+            Event::Pick { category_index: 1, clue_index: 0 },
+            Event::ClueFullyShown,
+            Event::Buzz{contestant_index: 0},
+            Event::AcceptAnswer,
+            Event::FinishClue,
+            Event::Pick { category_index: 1, clue_index: 1 },
+            Event::ClueFullyShown,
+            Event::Buzz{contestant_index: 0},
+            Event::AcceptAnswer,
+            Event::FinishClue,
         ]
         .into_iter()
         .fold(g, |mut g, e| {

@@ -21,27 +21,27 @@ pub struct Board {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct Category {
     pub title: String,
-    pub questions: Vec<Question>,
+    pub clues: Vec<Clue>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct Question {
+pub struct Clue {
     /// The prompt for players, in the form of an answer
-    pub question: String,
+    pub clue: String,
     /// The expected answer from players
-    pub answer: String,
+    pub response: String,
     /// More context around the question or alternative answers that the
     /// moderator might choose to accept too. Hidden from contestants.
     pub hint: String,
-    /// How much a contestant wins when solving the prompt. Can change e.g.
-    /// with a wager.
+    /// How much a contestant wins when solving the clue. Can change e.g. with a
+    /// wager.
     pub points: Points,
     /// If players can bet some or all of their points. True for example for a
-    /// Daily Double question.
+    /// Daily Double clue.
     pub can_wager: bool,
-    /// If the question is exclusive to the picker for a first attempt before
-    /// it get's opened up to all contestants. True for example for a Daily
-    /// Double question.
+    /// If the clue is exclusive to the picker for a first attempt before it
+    /// get's opened up to all contestants. True for example for a Daily Double
+    /// clue.
     pub exclusive: bool,
 }
 
@@ -78,22 +78,23 @@ pub enum GamePhase {
     Connecting,
     /// Contestants picking a question from the board
     Picking,
-    /// Betting points before seeing the prompt
-    Waging{question: Question},
-    /// The prompt/clue/question is shown or played to the contestants
-    Prompt{question: Question},
-    /// The prompt is still visible, but contestants can buzz in now. Can be
+    /// Betting points before seeing the clue
+    Waging{clue: Clue},
+    /// The clue/prompt is shown or played to the contestants
+    Clue{clue: Clue},
+    /// The clue is still visible, but contestants can buzz in now. Can be
     /// skipped e.g. for daily double questions.
-    Buzzing{question: Question},
+    Buzzing{clue: Clue},
     /// The indicated contestant ([Contestant::indicate]) buzzed in and
-    /// can attempt to answer the prompt
-    Buzzed{question: Question},
+    /// can attempt to answer the clue
+    Buzzed{clue: Clue},
     /// A correct answer was provided or all contestants failed
-    Resolution{question: Question},
-    /// After all questions are played the final score is shown. Either just
+    Resolution{clue: Clue},
+    /// After all clues are played the final score is shown. Either just
     /// all players with their points, or a representation of the board showing
     /// which contestant answerd the question correctly, or something
     /// completely different.
+    // todo: play final jeopardy
     Score,
 }
 

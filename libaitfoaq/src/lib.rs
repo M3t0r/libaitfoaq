@@ -36,8 +36,8 @@ impl Game {
             Event::ConnectContestant { name_hint } => self.connect_contestant(name_hint)?,
             Event::NameContestant { index, name } => self.name_contestant(index, name)?,
             Event::StartGame => self.start_game()?,
-            Event::Pick { category_index, question_index } =>  self.pick(category_index, question_index)?,
-            Event::PromptFullyShown => self.prompt_fully_shown()?,
+            Event::Pick { category_index, clue_index } =>  self.pick(category_index, clue_index)?,
+            Event::ClueFullyShown => self.clue_fully_shown()?,
             Event::Buzz { contestant_index } => self.buzz(contestant_index)?,
             _ => todo!(),
         }
@@ -117,38 +117,38 @@ impl Game {
         Ok(())
     }
 
-    fn pick(&mut self, category_index: usize, question_index: usize) -> Result<(), Error> {
+    fn pick(&mut self, category_index: usize, clue_index: usize) -> Result<(), Error> {
         if !matches!(&self.phase, GamePhase::Picking) {
             return Err(Error::WrongPhase {
                 is: self.phase.clone(),
             });
         }
-        let question = self.board
-            .categories.get(category_index).ok_or(Error::QuestionNotFound)?
-            .questions.get(question_index).ok_or(Error::QuestionNotFound)?
+        let clue = self.board
+            .categories.get(category_index).ok_or(Error::ClueNotFound)?
+            .clues.get(clue_index).ok_or(Error::ClueNotFound)?
             .clone();
-        self.phase = GamePhase::Prompt{question};
+        self.phase = GamePhase::Clue{clue};
         Ok(())
     }
 
-    fn prompt_fully_shown(&mut self) -> Result<(), Error> {
-        let question = match &self.phase {
-            GamePhase::Prompt { question } => Ok(question.clone()),
+    fn clue_fully_shown(&mut self) -> Result<(), Error> {
+        let clue = match &self.phase {
+            GamePhase::Clue { clue } => Ok(clue.clone()),
             _ => Err(Error::WrongPhase {
                 is: self.phase.clone(),
             })
         }?;
-        self.phase = GamePhase::Buzzing{question};
+        self.phase = GamePhase::Buzzing{clue};
         Ok(())
     }
 
     fn buzz(&mut self, contestant_index: usize) -> Result<(), Error> {
         match &mut self.phase {
             // allow buzzing in the buzzing phase
-            GamePhase::Buzzing { question } => {
-                let question = question.clone();
+            GamePhase::Buzzing { clue } => {
+                let clue = clue.clone();
                 self.indicate_contestant(contestant_index)?;
-                self.phase = GamePhase::Buzzed{question};
+                self.phase = GamePhase::Buzzed{clue};
                 Ok(())
             },
             // allow toggling the indication lights in the lobby or while picking
@@ -193,7 +193,7 @@ pub enum Error {
     WrongPhase { is: GamePhase },
     ContestantNotFound,
     NoContestants,
-    QuestionNotFound,
+    ClueNotFound,
 }
 
 #[cfg(test)]
@@ -206,12 +206,12 @@ mod tests {
                 .into_iter()
                 .map(|c| Category {
                     title: format!("Category {}", c),
-                    questions: (1..qs)
+                    clues: (1..qs)
                         .into_iter()
-                        .map(|q| Question {
-                            question: format!("Question {}", q),
-                            answer: format!("Question {}", q),
-                            hint: format!("Question {}", q),
+                        .map(|q| Clue {
+                            clue: format!("clue {}", q),
+                            response: format!("clue {}", q),
+                            hint: format!("clue {}", q),
                             points: 100 * q as Points,
                             can_wager: q == 4 && c == 2,
                             exclusive: q == 4 && c == 2,
@@ -236,8 +236,8 @@ mod tests {
                 name: "Test Contestant".to_owned(),
             },
             Event::StartGame,
-            Event::Pick{category_index: 0, question_index: 0},
-            Event::PromptFullyShown,
+            Event::Pick{category_index: 0, clue_index: 0},
+            Event::ClueFullyShown,
             Event::Buzz{contestant_index: 0},
             // Event::RejectAnswer,
             // Event::FinishQuestion,
@@ -255,7 +255,7 @@ mod tests {
             // Event::PromptFullyShown,
             // Event::Buzz{contestant_index: 0},
             // Event::AcceptAnswer,
-            // Event::FinishQuestion,
+            // Event::FinishClue,
         ]
         .into_iter()
         .fold(g, |mut g, e| {

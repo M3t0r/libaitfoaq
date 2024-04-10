@@ -16,19 +16,19 @@ use crate::state::{Contestant, GamePhase, GameState};
 ///    Connecting --> Picking: StartGame
 ///    state GameLoop {
 ///        Picking --> optional_waging: Pick
-///        optional_waging --> Prompt: if can_wager == false
+///        optional_waging --> Clue: if can_wager == false
 ///        optional_waging --> Waging: if can_wager == true
-///        Waging --> Prompt: SetWage
-///        Prompt --> Buzzing: PromptFullyShown
-///        Prompt --> next_or_end: FinishQuestion
+///        Waging --> Clue: SetWage
+///        Clue --> Buzzing: ClueFullyShown
+///        Clue --> next_or_end: FinishClue
 ///        Buzzing --> Buzzed: Buzz
-///        Buzzing --> next_or_end: FinishQuestion
-///        Buzzed --> Prompt: RejectAnswer
+///        Buzzing --> next_or_end: FinishClue
+///        Buzzed --> Clue: RejectAnswer
 ///        Buzzed --> Resolution: AcceptAnswer
-///        Buzzed --> Resolution: FinishQuestion
-///        Resolution --> next_or_end: FinishQuestion
-///        next_or_end --> Score: if questions_left <= 0
-///        next_or_end --> Picking: if questions_left > 0
+///        Buzzed --> Resolution: FinishClue
+///        Resolution --> next_or_end: FinishClue
+///        next_or_end --> Score: if clues_left <= 0
+///        next_or_end --> Picking: if clues_left > 0
 ///    }
 ///    Score --> [*]
 /// ```
@@ -38,7 +38,7 @@ pub enum Event {
     /// Change settings before starting the game.
     /// Only allowed in [GamePhase::Preparing]. Can be repeated.
     Settings,
-    /// Load a [Board] of questions.
+    /// Load a [Board] of clues.
     /// Only allowed in [GamePhase::Preparing]. Can be repeated, which replaces
     /// the already loaded board.
     LoadBoard(Board),
@@ -61,20 +61,19 @@ pub enum Event {
     /// [Contestants](Contestant) can connect afterwards.
     StartGame,
     /// Transition from [GamePhase::Picking] to [GamePhase::Waging] or
-    /// [GamePhase::Prompt] depending on
-    /// [Question::can_wager](crate::state::Question::can_wager) of the picked
-    /// question.
-    Pick{category_index: usize, question_index: usize},
+    /// [GamePhase::Clue] depending on
+    /// [Clue::can_wager](crate::state::Clue::can_wager) of the picked clue.
+    Pick{category_index: usize, clue_index: usize},
 
-    /// Transition from [GamePhase::Waging] to [GamePhase::Prompt].
+    /// Transition from [GamePhase::Waging] to [GamePhase::Clue].
     /// A [Contestant] waging some of their [Points].
     SetWage{points: Points},
 
-    /// Transition from [GamePhase::Prompt] to [GamePhase::Buzzing]. During
-    /// [GamePhase::Prompt] [Contestants](Contestant) can't buzz in so everyone
+    /// Transition from [GamePhase::Clue] to [GamePhase::Buzzing]. During
+    /// [GamePhase::Clue] [Contestants](Contestant) can't buzz in so everyone
     /// gets a chance to fully hear the prompt.
     // todo: make skippable with setting so contestants can buzz in immedieately
-    PromptFullyShown,
+    ClueFullyShown,
 
     /// A [Contestant] buzzing in. Transtion from [GamePhase::Buzzing] to
     /// [GamePhase::Buzzed]
@@ -89,7 +88,7 @@ pub enum Event {
     RevealHint,
     /// Transition from [GamePhase::Resolution] to [GamePhase::Score] or back to
     /// [GamePhase::Picking]. Can also be used to skip answering a prompt from
-    /// [GamePhase::Prompt], [GamePhase::Buzzing], or [GamePhase::Buzzed] without
+    /// [GamePhase::Clue], [GamePhase::Buzzing], or [GamePhase::Buzzed] without
     /// awarding/changing points.
-    FinishQuestion,
+    FinishClue,
 }

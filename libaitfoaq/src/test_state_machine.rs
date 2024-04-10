@@ -5,28 +5,28 @@ use crate::events::*;
 use crate::state::*;
 
 prop_compose! {
-    fn arb_question()(
-        q in ".*",
+    fn arb_clue()(
+        c in ".*",
         a in ".*",
         h in ".*",
         p in any::<Points>(),
         w in prop::bool::weighted(0.1),
         e in prop::bool::weighted(0.1),
-    ) -> Question {
-        Question { question: q, answer: a, hint: h, points: p, can_wager: w, exclusive: e }
+    ) -> Clue {
+        Clue { clue: c, response: a, hint: h, points: p, can_wager: w, exclusive: e }
     }
 }
 prop_compose! {
-    fn arb_category(qs: usize)
-                (title in ".*", questions in prop::collection::vec(arb_question(), prop::collection::size_range(qs)))
+    fn arb_category(nclues: usize)
+                (title in ".*", clues in prop::collection::vec(arb_clue(), prop::collection::size_range(nclues)))
                 -> Category {
-        Category {title, questions}
+        Category {title, clues}
     }
 }
 prop_compose! {
     fn arb_board()
-                (cs in 0..12, qs in 0..12)
-                (categories in prop::collection::vec(arb_category(qs as usize), prop::collection::size_range(cs as usize)))
+                (ncats in 0..12, nclues in 0..12)
+                (categories in prop::collection::vec(arb_category(nclues as usize), prop::collection::size_range(ncats as usize)))
                 -> Board {
         Board {categories}
     }

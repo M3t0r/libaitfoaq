@@ -67,7 +67,7 @@ pub enum Event {
     Pick{category_index: usize, question_index: usize},
 
     /// Transition from [GamePhase::Waging] to [GamePhase::Prompt].
-    /// A [Contestant] waging some of their [Points](crate::state::Points).
+    /// A [Contestant] waging some of their [Points].
     SetWage{points: Points},
 
     /// Transition from [GamePhase::Prompt] to [GamePhase::Buzzing]. During

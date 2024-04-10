@@ -79,17 +79,17 @@ pub enum GamePhase {
     /// Contestants picking a question from the board
     Picking,
     /// Betting points before seeing the prompt
-    Waging,
+    Waging{question: Question},
     /// The prompt/clue/question is shown or played to the contestants
-    Prompt,
+    Prompt{question: Question},
     /// The prompt is still visible, but contestants can buzz in now. Can be
     /// skipped e.g. for daily double questions.
-    Buzzing,
+    Buzzing{question: Question},
     /// The indicated contestant ([Contestant::indicate]) buzzed in and
     /// can attempt to answer the prompt
-    Buzzed,
+    Buzzed{question: Question},
     /// A correct answer was provided or all contestants failed
-    Resolution,
+    Resolution{question: Question},
     /// After all questions are played the final score is shown. Either just
     /// all players with their points, or a representation of the board showing
     /// which contestant answerd the question correctly, or something

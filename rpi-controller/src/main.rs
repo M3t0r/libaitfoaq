@@ -1,7 +1,7 @@
-use rppal::gpio::{Gpio, Pin, InputPin, OutputPin};
+use rppal::gpio::{Gpio, InputPin, OutputPin, Pin};
 
-use std::time::Duration;
 use std::thread::sleep;
+use std::time::Duration;
 
 struct Handset {
     switch: InputPin,

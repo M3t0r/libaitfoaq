@@ -12,6 +12,7 @@ pub struct Game {
     phase: GamePhase,
     board: Board,
     contestants: Vec<Contestant>,
+    indications: Vec<usize>,
     options: Options,
 }
 
@@ -23,6 +24,7 @@ impl Game {
                 categories: Vec::new(),
             },
             contestants: Vec::with_capacity(4),
+            indications: Vec::with_capacity(4),
             options: Options::default(),
         }
     }
@@ -34,6 +36,9 @@ impl Game {
             Event::ConnectContestant { name_hint } => self.connect_contestant(name_hint)?,
             Event::NameContestant { index, name } => self.name_contestant(index, name)?,
             Event::StartGame => self.start_game()?,
+            Event::Pick { category_index, question_index } =>  self.pick(category_index, question_index)?,
+            Event::PromptFullyShown => self.prompt_fully_shown()?,
+            Event::Buzz { contestant_index } => self.buzz(contestant_index)?,
             _ => todo!(),
         }
         Ok(self.build_game_state())
@@ -111,6 +116,70 @@ impl Game {
         self.phase = GamePhase::Picking;
         Ok(())
     }
+
+    fn pick(&mut self, category_index: usize, question_index: usize) -> Result<(), Error> {
+        if !matches!(&self.phase, GamePhase::Picking) {
+            return Err(Error::WrongPhase {
+                is: self.phase.clone(),
+            });
+        }
+        let question = self.board
+            .categories.get(category_index).ok_or(Error::QuestionNotFound)?
+            .questions.get(question_index).ok_or(Error::QuestionNotFound)?
+            .clone();
+        self.phase = GamePhase::Prompt{question};
+        Ok(())
+    }
+
+    fn prompt_fully_shown(&mut self) -> Result<(), Error> {
+        let question = match &self.phase {
+            GamePhase::Prompt { question } => Ok(question.clone()),
+            _ => Err(Error::WrongPhase {
+                is: self.phase.clone(),
+            })
+        }?;
+        self.phase = GamePhase::Buzzing{question};
+        Ok(())
+    }
+
+    fn buzz(&mut self, contestant_index: usize) -> Result<(), Error> {
+        match &mut self.phase {
+            // allow buzzing in the buzzing phase
+            GamePhase::Buzzing { question } => {
+                let question = question.clone();
+                self.indicate_contestant(contestant_index)?;
+                self.phase = GamePhase::Buzzed{question};
+                Ok(())
+            },
+            // allow toggling the indication lights in the lobby or while picking
+            GamePhase::Connecting | GamePhase::Picking => {
+                if let Some(i) = self.indications.iter().position(|c| c == &contestant_index) {
+                    self.indications.remove(i);
+                    self.contestants
+                        .get_mut(contestant_index)
+                        .ok_or(Error::ContestantNotFound)?
+                        .indicate = false;
+                } else {
+                    self.indicate_contestant(contestant_index)?;
+                }
+                Ok(())
+            },
+            _ => Err(Error::WrongPhase {
+                is: self.phase.clone(),
+            })
+        }
+    }
+
+    fn indicate_contestant(&mut self, contestant_index: usize) -> Result<(), Error> {
+        self.contestants
+            .get_mut(contestant_index)
+            .ok_or(Error::ContestantNotFound)?
+            .indicate = true;
+        if !self.indications.contains(&contestant_index) {
+            self.indications.push(contestant_index);
+        }
+        Ok(())
+    }
 }
 
 impl Default for Game {
@@ -157,7 +226,7 @@ mod tests {
     fn it_works() {
         let g = Game::default();
         let r = vec![
-            Event::LoadBoard(get_test_board(6, 5)),
+            Event::LoadBoard(get_test_board(2, 2)),
             Event::OpenLobby,
             Event::ConnectContestant {
                 name_hint: "test_contestant_hint".to_owned(),
@@ -167,15 +236,36 @@ mod tests {
                 name: "Test Contestant".to_owned(),
             },
             Event::StartGame,
+            Event::Pick{category_index: 0, question_index: 0},
+            Event::PromptFullyShown,
+            Event::Buzz{contestant_index: 0},
+            // Event::RejectAnswer,
+            // Event::FinishQuestion,
+            // Event::Pick { category_index: 0, question_index: 1 },
+            // Event::PromptFullyShown,
+            // Event::Buzz{contestant_index: 0},
+            // Event::AcceptAnswer,
+            // Event::FinishQuestion,
+            // Event::Pick { category_index: 1, question_index: 0 },
+            // Event::PromptFullyShown,
+            // Event::Buzz{contestant_index: 0},
+            // Event::AcceptAnswer,
+            // Event::FinishQuestion,
+            // Event::Pick { category_index: 1, question_index: 1 },
+            // Event::PromptFullyShown,
+            // Event::Buzz{contestant_index: 0},
+            // Event::AcceptAnswer,
+            // Event::FinishQuestion,
         ]
         .into_iter()
         .fold(g, |mut g, e| {
-            g.apply(e).expect("could not apply event");
+            g.apply(e.clone()).expect(format!("could not apply event {:?}", e).as_str());
             g
         });
-        assert_eq!(r.board, get_test_board(6, 5));
+        assert_eq!(r.board, get_test_board(2, 2));
         assert_eq!(r.contestants.len(), 1);
         assert_eq!(r.contestants[0].name, Some("Test Contestant".to_owned()));
-        assert!(matches!(r.phase, GamePhase::Picking));
+        // assert_eq!(r.contestants[0].points, 10 as Points);
+        // assert!(matches!(r.phase, GamePhase::Score));
     }
 }

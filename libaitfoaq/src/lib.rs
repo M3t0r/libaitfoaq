@@ -275,8 +275,25 @@ impl Game {
         Ok(())
     }
 
+    /// Draws a random contestant based on the memory layout of all contestants names, which varies
+    /// from match to match, and their points, which varies from round to round.
+    ///
+    /// Two consecutive calls will return the same contestant when neither the points nor their
+    /// names have changed. One could argue that's a feature. I do.
+    ///
+    /// Initialisator: https://xkcd.com/221/
     fn random_contestant(&self) -> ContestantHandle {
-        todo!("draw a random contestant")
+        let random = self.contestants.iter().fold(
+            4, // fair dice roll
+            |entropy, c| {
+                entropy
+                    ^ (c.name.as_ref().unwrap_or(&c.name_hint).as_str().as_ptr() as usize)
+                        .rotate_left(c.points as u32)
+            },
+        );
+
+        dbg!(random, random % self.contestants.len());
+        random % self.contestants.len()
     }
 }
 

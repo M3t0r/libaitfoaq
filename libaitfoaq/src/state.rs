@@ -7,9 +7,6 @@ pub type ClueHandle = (usize, usize);
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct GameState {
     pub contestants: Vec<Contestant>,
-    /// The indexes of indicated contestants in [contestants](GameState::contestants). Ordered by the
-    /// time they buzzed in, oldest first.
-    pub indicated_contestants: Vec<ContestantHandle>,
     pub board: Board,
     pub phase: GamePhase,
     pub options: Options,
@@ -94,20 +91,31 @@ pub enum GamePhase {
     /// controllers. The board is still hidden.
     Connecting,
     /// Contestants picking a question from the board
-    Picking,
+    Picking { contestant: ContestantHandle },
     /// Betting points before seeing the clue
-    Waging { clue: ClueHandle },
+    Waging {
+        clue: ClueHandle,
+        contestant: ContestantHandle,
+    },
     /// The clue/prompt is shown or played to the contestants
-    // Clue{clue: Clue, exclusive: Option<Contestant>},
-    Clue { clue: ClueHandle },
+    Clue {
+        clue: ClueHandle,
+        exclusive: Option<ContestantHandle>,
+    },
     /// The clue is still visible, but contestants can buzz in now. Can be
     /// skipped e.g. for daily double questions.
     Buzzing { clue: ClueHandle },
     /// The indicated contestant ([Contestant::indicate]) buzzed in and
     /// can attempt to answer the clue
-    Buzzed { clue: ClueHandle },
+    Buzzed {
+        clue: ClueHandle,
+        contestant: ContestantHandle,
+    },
     /// A correct answer was provided or all contestants failed
-    Resolution { clue: ClueHandle },
+    Resolution {
+        clue: ClueHandle,
+        contestant: ContestantHandle,
+    },
     /// After all clues are played the final score is shown. Either just
     /// all players with their points, or a representation of the board showing
     /// which contestant answerd the question correctly, or something
@@ -118,7 +126,6 @@ pub enum GamePhase {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct Options {
-    pub allow_game_without_contestant: bool,
     // pub multiple_attempts: bool, allow contestants to buzz in again after providing a wrong answer
     // pub wrong_answer_penalty: bool, deduct points on wrong anwsers
     // pub wait_for_clue: bool, wait for the clue to be finished reading/playing once before opening up for buzzing
@@ -126,8 +133,6 @@ pub struct Options {
 
 impl Default for Options {
     fn default() -> Self {
-        Options {
-            allow_game_without_contestant: false,
-        }
+        Options {}
     }
 }

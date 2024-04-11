@@ -12,7 +12,6 @@ pub struct Game {
     phase: GamePhase,
     board: Board,
     contestants: Vec<Contestant>,
-    indications: Vec<ContestantHandle>,
     options: Options,
 }
 
@@ -24,7 +23,6 @@ impl Game {
                 categories: Vec::new(),
             },
             contestants: Vec::with_capacity(4),
-            indications: Vec::with_capacity(4),
             options: Options::default(),
         }
     }
@@ -44,7 +42,7 @@ impl Game {
             Event::RejectAnswer => self.reject_answer()?,
             Event::RevealHint => self.reveal_hint()?,
             Event::FinishClue => self.finish_clue()?,
-            _ => todo!(),
+            _ => todo!("other events"),
         }
         Ok(self.build_game_state())
     }
@@ -52,13 +50,6 @@ impl Game {
     fn build_game_state(&self) -> GameState {
         GameState {
             contestants: self.contestants.clone(),
-            indicated_contestants: self
-                .contestants
-                .iter()
-                .enumerate()
-                .filter(|(_, c)| c.indicate)
-                .map(|(i, _)| i)
-                .collect(),
             board: self.board.clone(),
             phase: self.phase.clone(),
             options: self.options.clone(),
@@ -115,19 +106,21 @@ impl Game {
                 is: self.phase.clone(),
             });
         }
-        if self.contestants.is_empty() && !self.options.allow_game_without_contestant {
+        if self.contestants.is_empty() {
             return Err(Error::NoContestants);
         }
-        self.phase = GamePhase::Picking;
+        self.phase = GamePhase::Picking {
+            contestant: self.random_contestant(),
+        };
         Ok(())
     }
 
     fn pick(&mut self, clue_handle: ClueHandle) -> Result<(), Error> {
-        if !matches!(&self.phase, GamePhase::Picking) {
+        let GamePhase::Picking { contestant } = self.phase else {
             return Err(Error::WrongPhase {
                 is: self.phase.clone(),
             });
-        }
+        };
         let (category_index, clue_index) = clue_handle;
         let clue = self
             .board
@@ -138,20 +131,29 @@ impl Game {
             .get(clue_index)
             .ok_or(Error::ClueNotFound)?
             .clone();
-        // let exclusive = if clue.exclusive { todo!() } else { None };
-        // self.phase = GamePhase::Clue{clue, exclusive};
-        self.phase = GamePhase::Clue { clue: clue_handle };
+        self.phase = GamePhase::Clue {
+            clue: clue_handle,
+            exclusive: clue.exclusive.then_some(contestant),
+        };
         Ok(())
     }
 
     fn clue_fully_shown(&mut self) -> Result<(), Error> {
-        let clue = match self.phase {
-            GamePhase::Clue { clue } => Ok(clue),
-            _ => Err(Error::WrongPhase {
-                is: self.phase.clone(),
-            }),
-        }?;
-        self.phase = GamePhase::Buzzing { clue };
+        self.phase = match self.phase {
+            GamePhase::Clue {
+                clue,
+                exclusive: None,
+            } => GamePhase::Buzzing { clue },
+            GamePhase::Clue {
+                clue,
+                exclusive: Some(contestant),
+            } => GamePhase::Buzzed { clue, contestant },
+            _ => {
+                return Err(Error::WrongPhase {
+                    is: self.phase.clone(),
+                })
+            }
+        };
         Ok(())
     }
 
@@ -160,20 +162,18 @@ impl Game {
             // allow buzzing in the buzzing phase
             GamePhase::Buzzing { clue } => {
                 self.indicate_contestant(contestant_index)?;
-                self.phase = GamePhase::Buzzed { clue };
+                self.phase = GamePhase::Buzzed {
+                    clue,
+                    contestant: contestant_index,
+                };
                 Ok(())
             }
-            // allow toggling the indication lights in the lobby or while picking
-            GamePhase::Connecting | GamePhase::Picking => {
-                if let Some(i) = self.indications.iter().position(|c| c == &contestant_index) {
-                    self.indications.remove(i);
-                    self.contestants
-                        .get_mut(contestant_index)
-                        .ok_or(Error::ContestantNotFound)?
-                        .indicate = false;
-                } else {
-                    self.indicate_contestant(contestant_index)?;
-                }
+            // allow toggling the indication lights in the lobby
+            GamePhase::Connecting => {
+                self.contestants
+                    .get_mut(contestant_index)
+                    .ok_or(Error::ContestantNotFound)?
+                    .indicate ^= true;
                 Ok(())
             }
             _ => Err(Error::WrongPhase {
@@ -183,39 +183,37 @@ impl Game {
     }
 
     fn set_wage(&mut self, points: Points) -> Result<(), Error> {
-        match self.phase {
-            GamePhase::Waging { clue } => {
-                self.phase = GamePhase::Clue { clue };
-                Ok(())
-            }
-            _ => Err(Error::WrongPhase {
+        let GamePhase::Waging { clue, contestant } = self.phase else {
+            return Err(Error::WrongPhase {
                 is: self.phase.clone(),
-            }),
-        }
+            });
+        };
+        // todo: modify points of clue to wager
+        self.phase = GamePhase::Clue {
+            clue,
+            exclusive: Some(contestant),
+        };
+        Ok(())
     }
 
     fn accept_answer(&mut self) -> Result<(), Error> {
-        match self.phase {
-            GamePhase::Buzzed { clue } => {
-                self.phase = GamePhase::Resolution { clue };
-                Ok(())
-            }
-            _ => Err(Error::WrongPhase {
+        let GamePhase::Buzzed { clue, contestant } = self.phase else {
+            return Err(Error::WrongPhase {
                 is: self.phase.clone(),
-            }),
-        }
+            });
+        };
+        self.phase = GamePhase::Resolution { clue, contestant };
+        Ok(())
     }
 
     fn reject_answer(&mut self) -> Result<(), Error> {
-        match self.phase {
-            GamePhase::Buzzed { clue } => {
-                self.phase = GamePhase::Buzzing { clue };
-                Ok(())
-            }
-            _ => Err(Error::WrongPhase {
+        let GamePhase::Buzzed { clue, .. } = self.phase else {
+            return Err(Error::WrongPhase {
                 is: self.phase.clone(),
-            }),
-        }
+            });
+        };
+        self.phase = GamePhase::Buzzing { clue };
+        Ok(())
     }
 
     fn reveal_hint(&mut self) -> Result<(), Error> {
@@ -228,23 +226,33 @@ impl Game {
     }
 
     fn finish_clue(&mut self) -> Result<(), Error> {
-        let (phase, clue) = match self.phase {
-            GamePhase::Clue { clue } => (None, clue),
-            GamePhase::Buzzing { clue } => (None, clue),
-            GamePhase::Buzzed { clue } => (Some(GamePhase::Resolution { clue }), clue),
-            GamePhase::Resolution { clue } => (None, clue),
+        match self.phase {
+            GamePhase::Clue { clue, exclusive } => {
+                self.board.mark_solved(clue)?;
+                self.phase = self.next_or_end(exclusive);
+            }
+            GamePhase::Buzzing { clue } => {
+                self.board.mark_solved(clue)?;
+                self.phase = self.next_or_end(None);
+            }
+            GamePhase::Buzzed { clue, contestant } => {
+                self.board.mark_solved(clue)?;
+                self.phase = GamePhase::Resolution { clue, contestant };
+            }
+            GamePhase::Resolution { clue, contestant } => {
+                self.board.mark_solved(clue)?;
+                self.phase = self.next_or_end(Some(contestant));
+            }
             _ => {
                 return Err(Error::WrongPhase {
                     is: self.phase.clone(),
                 })
             }
         };
-        self.board.mark_solved(clue)?;
-        self.phase = phase.unwrap_or(self.next_or_end());
         Ok(())
     }
 
-    fn next_or_end(&mut self) -> GamePhase {
+    fn next_or_end(&mut self, contestant: Option<ContestantHandle>) -> GamePhase {
         if self
             .board
             .categories
@@ -254,19 +262,21 @@ impl Game {
         {
             GamePhase::Score
         } else {
-            GamePhase::Picking
+            GamePhase::Picking {
+                contestant: contestant.unwrap_or_else(|| self.random_contestant()),
+            }
         }
     }
 
-    fn indicate_contestant(&mut self, contestant: ContestantHandle) -> Result<(), Error> {
-        self.contestants
-            .get_mut(contestant)
-            .ok_or(Error::ContestantNotFound)?
-            .indicate = true;
-        if !self.indications.contains(&contestant) {
-            self.indications.push(contestant);
+    fn indicate_contestant(&mut self, contestant_handle: ContestantHandle) -> Result<(), Error> {
+        for (i, contestant) in self.contestants.iter_mut().enumerate() {
+            contestant.indicate = i == contestant_handle;
         }
         Ok(())
+    }
+
+    fn random_contestant(&self) -> ContestantHandle {
+        todo!("draw a random contestant")
     }
 }
 

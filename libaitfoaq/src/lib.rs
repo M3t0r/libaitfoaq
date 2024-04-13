@@ -44,10 +44,10 @@ impl Game {
             Event::FinishClue => self.finish_clue()?,
             _ => todo!("other events"),
         }
-        Ok(self.build_game_state())
+        Ok(self.get_game_state())
     }
 
-    fn build_game_state(&self) -> GameState {
+    pub fn get_game_state(&self) -> GameState {
         GameState {
             contestants: self.contestants.clone(),
             board: self.board.clone(),

@@ -1,0 +1,81 @@
+@font-face {
+  font-family: 'Mallanna';
+  font-style: normal;
+  font-weight: 400;
+  src: url('/Mallanna-Regular.ttf') format('truetype');
+}
+
+body {
+  font-family: 'Mallanna';
+  font-weight: 400;
+}
+
+h1, h2, h3, h4, h5 {
+  font-family: 'Mallanna';
+  font-weight: 700;
+}
+
+html {font-size: 100%;} /* 16px */
+
+h1 {font-size: 3.053rem; /* 48.8px */}
+
+h2 {font-size: 2.442rem; /* 39.04px */}
+
+h3 {font-size: 1.954rem; /* 31.2px */}
+
+h4 {font-size: 1.563rem; /* 24.96px */}
+
+h5 {font-size: 1.250rem; /* 20px */}
+
+small {font-size: 0.800rem; /* 12.8px */}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --text: #040029;
+    --background: #b0a9e5;
+    --primary: #050061;
+    --secondary: #020024;
+    --accent: #6460d7;
+  }
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text: #dad6ff;
+    --background: #211a56;
+    --primary: #a49fff;
+    --secondary: #dddbff;
+    --accent: #2c289f;
+  }
+}
+
+@keyframes pulse-animation {
+    0%,
+    100% {
+        opacity: 0;
+    }
+    50% {
+        opacity: 1;
+    }
+}
+
+body {
+    color: var(--text);
+    background-color: var(--background);
+}
+
+#connecting {
+    text-transform: uppercase;
+    font-size: 3.054rem;
+}
+
+.htmx-indicator {
+    animation: pulse-animation 2s ease 0s infinite normal both running;
+    display:none;
+}
+.htmx-request .htmx-indicator{
+    display:inline;
+}
+.htmx-request.htmx-indicator{
+    display:inline;
+}
+

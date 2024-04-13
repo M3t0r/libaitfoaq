@@ -115,25 +115,15 @@ impl Game {
         Ok(())
     }
 
-    fn pick(&mut self, clue_handle: ClueHandle) -> Result<(), Error> {
+    fn pick(&mut self, clue: ClueHandle) -> Result<(), Error> {
         let GamePhase::Picking { contestant } = self.phase else {
             return Err(Error::WrongPhase {
                 is: self.phase.clone(),
             });
         };
-        let (category_index, clue_index) = clue_handle;
-        let clue = self
-            .board
-            .categories
-            .get(category_index)
-            .ok_or(Error::ClueNotFound)?
-            .clues
-            .get(clue_index)
-            .ok_or(Error::ClueNotFound)?
-            .clone();
         self.phase = GamePhase::Clue {
-            clue: clue_handle,
-            exclusive: clue.exclusive.then_some(contestant),
+            clue,
+            exclusive: self.board.get(clue)?.exclusive.then_some(contestant),
         };
         Ok(())
     }
@@ -205,13 +195,7 @@ impl Game {
         self.contestants
             .get_mut(contestant)
             .ok_or(Error::ContestantNotFound)?
-            .points += self.board.categories
-                .get(clue.0)
-                .ok_or(Error::ClueNotFound)?
-                .clues
-                .get(clue.1)
-                .ok_or(Error::ClueNotFound)?
-                .points;
+            .points += self.board.get(clue)?.points;
         self.phase = GamePhase::Resolution { clue, contestant };
         Ok(())
     }

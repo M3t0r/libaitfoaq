@@ -202,6 +202,16 @@ impl Game {
                 is: self.phase.clone(),
             });
         };
+        self.contestants
+            .get_mut(contestant)
+            .ok_or(Error::ContestantNotFound)?
+            .points += self.board.categories
+                .get(clue.0)
+                .ok_or(Error::ClueNotFound)?
+                .clues
+                .get(clue.1)
+                .ok_or(Error::ClueNotFound)?
+                .points;
         self.phase = GamePhase::Resolution { clue, contestant };
         Ok(())
     }
@@ -393,7 +403,7 @@ mod tests {
         assert_eq!(r.board, test_board);
         assert_eq!(r.contestants.len(), 1);
         assert_eq!(r.contestants[0].name, Some("Test Contestant".to_owned()));
-        // assert_eq!(r.contestants[0].points, 10 as Points);
+        assert_eq!(r.contestants[0].points, 500 as Points);
         assert!(matches!(r.phase, GamePhase::Score));
     }
 }

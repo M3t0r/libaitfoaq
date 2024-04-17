@@ -7,6 +7,7 @@ use tokio_util::sync::CancellationToken;
 pub type Out = GameState;
 pub type In = Event;
 
+#[derive(Debug)]
 pub struct State {
     game: Game,
     out_tx: watch::Sender<Out>,
@@ -15,7 +16,7 @@ pub struct State {
     in_rx: mpsc::Receiver<In>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct StateChannels {
     pub rx: watch::Receiver<Out>,
     pub tx: mpsc::Sender<In>,

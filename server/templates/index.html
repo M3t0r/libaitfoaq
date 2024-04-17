@@ -7,8 +7,28 @@
     <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-    <main hx-ext="ws" ws-connect="/websocket">
+    <main hx-ext="ws" ws-connect="/websocket" class="htmx-request">
         <div class="htmx-indicator" id="connecting">connecting</div>
+        <div id="board"></div>
+        <div id="contestants"></div>
+        <div id="admin"></div>
+        <div id="errors" class="hide"></div>
     </main>
+    <script>
+        htmx.on("htmx:wsOpen", (evt) => {
+            evt.detail.elt.classList.remove("htmx-request");
+        });
+        htmx.on("htmx:wsClose", (evt) => {
+            evt.detail.elt.classList.add("htmx-request");
+        });
+        htmx.on("htmx:wsBeforeMessage", () => {
+            console.log("test", htmx.find("#errors"));
+            htmx.addClass(htmx.find("#errors"), "old");
+        });
+        
+        htmx.config.wsReconnectDelay = function (retryCount) {
+            return 150 + (Math.min(retryCount, 4) * 100) + (200 * Math.random());
+        }
+    </script>
 </body>
 </html>

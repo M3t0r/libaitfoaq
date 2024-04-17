@@ -1,0 +1,24 @@
+{% if !is_admin %}
+not admin
+{% else %}
+<fieldset><legend>Admin</legend>
+    <label>
+        Phase:&nbsp;
+        <input readonly id="phase" value="{{ "{:?}"|format(state.phase) }}">
+    </label><br>
+    <form ws-send hx-vals='{"type": "load_board"}'>
+        <label>
+            Board:&nbsp;
+            <input name="board" placeholder="./board.json">&nbsp;
+        </label>
+        <input type="submit" value="load">
+        <br>
+    </form>
+    <!-- <button -->
+    <!--     ws-send -->
+    <!--     hx-vals='{"event_type": "event_b", "field3": true, "field4": ["value4a", "value4b"]}' -->
+    <!-- > -->
+    <!--     Send EventB -->
+    <!-- </button> -->
+</fieldset>
+{% endif %}

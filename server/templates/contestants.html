@@ -1,0 +1,5 @@
+<ul>
+    {% for c in state.contestants %}
+    <li>{{ c.name.as_deref().unwrap_or(c.name_hint)|e }}</li>
+    {% endfor %}
+</ul>

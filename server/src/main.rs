@@ -1,12 +1,14 @@
 use askama_axum::Template;
 use axum::{
-    extract::{ws::WebSocketUpgrade, State},
+    extract::{ws::WebSocketUpgrade, ConnectInfo, State},
     http::{header, StatusCode},
     response::IntoResponse,
     routing::{get, post},
     Router,
 };
+use tracing_subscriber::prelude::*;
 use state::StateChannels;
+use std::net::SocketAddr;
 use tokio_util::sync::CancellationToken;
 
 mod communication;
@@ -14,8 +16,14 @@ mod state;
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
-    // initialize tracing
-    tracing_subscriber::fmt::init();
+    tracing_subscriber::registry()
+        .with(console_subscriber::spawn())
+        .with(tracing_subscriber::fmt::layer())
+        .with(
+            tracing_subscriber::EnvFilter::from_default_env()
+                .add_directive("libaitfoaq_server=trace".parse().unwrap())
+        )
+        .init();
 
     let cancellation_token = CancellationToken::new();
 
@@ -24,6 +32,7 @@ async fn main() {
     let app = Router::new()
         .route("/", get(index))
         .route("/websocket", get(websocket))
+        .route("/favicon.ico", get(favicon))
         .route("/style.css", get(style))
         .route("/Mallanna-Regular.ttf", get(mallanna))
         .route("/htmx.min.js", get(htmx))
@@ -34,10 +43,13 @@ async fn main() {
 
     tokio::join!(
         async {
-            axum::serve(listener, app)
-                .with_graceful_shutdown(cancellation_token.clone().cancelled_owned())
-                .await
-                .expect("stopped serving");
+            axum::serve(
+                listener,
+                app.into_make_service_with_connect_info::<SocketAddr>(),
+            )
+            .with_graceful_shutdown(cancellation_token.clone().cancelled_owned())
+            .await
+            .expect("stopped serving");
         },
         async {
             state.process(cancellation_token.clone()).await;
@@ -56,8 +68,17 @@ async fn main() {
 #[template(path = "index.html")]
 struct Index;
 
+#[tracing::instrument]
 async fn index() -> Index {
     Index
+}
+
+async fn favicon() -> impl IntoResponse {
+    (
+        StatusCode::OK,
+        [(header::CONTENT_TYPE, "image/x-icon")],
+        include_bytes!("../templates/favicon.ico"),
+    )
 }
 
 async fn style() -> impl IntoResponse {
@@ -91,9 +112,14 @@ async fn htmx_ws() -> impl IntoResponse {
         include_str!("../templates/htmx.ws.js"),
     )
 }
+
+#[tracing::instrument]
 async fn websocket(
+    ConnectInfo(peer_address): ConnectInfo<SocketAddr>,
     ws: WebSocketUpgrade,
     State(channels): axum::extract::State<StateChannels>,
 ) -> impl IntoResponse {
-    ws.on_upgrade(|socket| crate::communication::player_handler(socket, channels))
+    ws.on_upgrade(move |socket| {
+        crate::communication::player_handler(socket, peer_address, channels)
+    })
 }

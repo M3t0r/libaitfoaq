@@ -6,4 +6,9 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+futures-util = "0.3.30"
 rppal = { version = "0.17.1" }
+tokio = { version = "1.37.0", features = ["sync", "rt", "macros", "time", "signal"] }
+tokio-tungstenite = "0.21.0"
+tokio-util = "0.7.10"
+url = "2.5.0"

@@ -114,12 +114,13 @@ async fn htmx_ws() -> impl IntoResponse {
     )
 }
 
-#[tracing::instrument]
+#[tracing::instrument(skip(ws, channels))]
 async fn websocket(
     ConnectInfo(peer_address): ConnectInfo<SocketAddr>,
     ws: WebSocketUpgrade,
     State(channels): axum::extract::State<StateChannels>,
 ) -> impl IntoResponse {
+    tracing::info!(%peer_address, "new websocket connection");
     ws.on_upgrade(move |socket| {
         crate::communication::player_handler(socket, peer_address, channels)
     })

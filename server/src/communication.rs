@@ -111,17 +111,21 @@ fn render_game_state(state: &GameState) -> String {
 #[serde(rename_all = "snake_case", tag = "type")]
 enum Input {
     LoadBoard{board: String},
+    OpenLobby,
+    StartGame,
 }
 
 async fn handle_input(input: Input) -> Result<Option<libaitfoaq::events::Event>, Error> {
     match input {
         Input::LoadBoard{board: board_path} => {
+            // todo: load from uploaded json or zipfile instead of path
             let board = tokio::fs::read(board_path).await?;
             let board: libaitfoaq::state::Board = serde_json::from_slice(&board)?;
-            return Ok(Some(Event::LoadBoard(board)));
+            Ok(Some(Event::LoadBoard(board)))
         }
+        Input::OpenLobby => Ok(Some(Event::OpenLobby)),
+        Input::StartGame => Ok(Some(Event::StartGame)),
     }
-    Ok(None)
 }
 
 #[derive(Debug, Error, Template)]

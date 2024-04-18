@@ -3,22 +3,36 @@ not admin
 {% else %}
 <fieldset><legend>Admin</legend>
     <label>
-        Phase:&nbsp;
+        Phase:
         <input readonly id="phase" value="{{ "{:?}"|format(state.phase) }}">
-    </label><br>
+    </label>
+    {% match state.phase %}
+        {% when libaitfoaq::state::GamePhase::Preparing %}
+            <button
+                ws-send
+                hx-vals='{"type": "open_lobby"}'
+            >
+                Open Lobby
+            </button>
+        {% when libaitfoaq::state::GamePhase::Connecting %}
+            {% if state.contestants.len() > 0 %}
+            <button
+                ws-send
+                hx-vals='{"type": "start_game"}'
+            >
+                Start Game!
+            </button>
+            {% endif %}
+        {% else %}
+    {% endmatch %}
+    <br>
     <form ws-send hx-vals='{"type": "load_board"}'>
         <label>
-            Board:&nbsp;
-            <input name="board" placeholder="./board.json">&nbsp;
+            Board:
+            <input name="board" placeholder="./board.json">
         </label>
         <input type="submit" value="load">
         <br>
     </form>
-    <!-- <button -->
-    <!--     ws-send -->
-    <!--     hx-vals='{"event_type": "event_b", "field3": true, "field4": ["value4a", "value4b"]}' -->
-    <!-- > -->
-    <!--     Send EventB -->
-    <!-- </button> -->
 </fieldset>
 {% endif %}

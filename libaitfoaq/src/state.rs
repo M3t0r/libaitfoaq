@@ -44,6 +44,16 @@ impl Board {
     }
 }
 
+impl Board {
+    pub fn clue_rows(&self) -> Vec<Vec<Clue>> {
+        if self.categories.len() == 0 {
+            return vec![];
+        }
+        (0..self.categories[0].clues.len())
+            .map(|r| self.categories.iter().map(move |c| c.clues[r].clone()).collect()).collect()
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct Category {
     pub title: String,

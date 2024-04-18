@@ -1,7 +1,16 @@
+<div id="board">
 <table>
     <tr>
     {% for c in state.board.categories %}
         <td>{{ c.title }}</td>
     {% endfor %}
     </tr>
+    {% for r in state.board.clue_rows() %}
+    <tr>
+        {% for c in r %}
+            <td>{{ c.points }}</td>
+        {% endfor %}
+    </tr>
+    {% endfor %}
 </table>
+</div>

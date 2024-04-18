@@ -8,7 +8,7 @@ use axum::{
 };
 use tracing_subscriber::prelude::*;
 use state::StateChannels;
-use std::net::SocketAddr;
+use std::{net::SocketAddr, path::PathBuf};
 use tokio_util::sync::CancellationToken;
 
 mod communication;
@@ -27,7 +27,8 @@ async fn main() {
 
     let cancellation_token = CancellationToken::new();
 
-    let mut state = crate::state::State::new();
+    let journal = PathBuf::from("./journal.jsonl");
+    let mut state = crate::state::State::with_journal(&journal).expect("Could not load or create journal file");
 
     let app = Router::new()
         .route("/", get(index))

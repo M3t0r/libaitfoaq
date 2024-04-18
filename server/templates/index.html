@@ -17,12 +17,12 @@
     <script>
         htmx.on("htmx:wsOpen", (evt) => {
             evt.detail.elt.classList.remove("htmx-request");
+            // htmx.findAll("link[rel='stylesheet']").forEach(l => {l.href = l.href.replace(/\?(.*)|$/, "\?$1a")});
         });
         htmx.on("htmx:wsClose", (evt) => {
             evt.detail.elt.classList.add("htmx-request");
         });
         htmx.on("htmx:wsBeforeMessage", () => {
-            console.log("test", htmx.find("#errors"));
             htmx.addClass(htmx.find("#errors"), "old");
         });
         

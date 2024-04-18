@@ -1,6 +1,6 @@
 use std::net::SocketAddr;
 
-use crate::state::StateChannels;
+use crate::state::{State, StateChannels};
 use axum::extract::ws::{Message, WebSocket};
 use askama::Template;
 use libaitfoaq::{events::Event, state::GameState};
@@ -61,12 +61,8 @@ pub async fn player_handler(
                             Ok(input) => {
                                 tracing::trace!(%connection_name, ?input, "received msg from client");
                                 match handle_input(input).await {
-                                    Ok(Some(state_event)) => {
-                                        tx
-                                            .send(state_event)
-                                            .await
-                                            .expect("could not send message to internal state processor");
-                                        None
+                                    Ok(Some(event)) => {
+                                        State::send(event, &tx).await.err().map(|e| Message::Text(Error::from(e).render().unwrap_or("unrenderable error".to_string())))
                                     },
                                     Ok(None) => None,
                                     Err(error) => {
@@ -98,14 +94,14 @@ pub async fn player_handler(
 
 #[derive(Template)]
 #[template(path = "state.html")]
-struct State {
+struct StateTemplate {
     state: GameState,
     is_admin: bool,
 }
 
 #[tracing::instrument]
 fn render_game_state(state: &GameState) -> String {
-    State {
+    StateTemplate {
         state: state.clone(),
         is_admin: true,
     }.render().unwrap()
@@ -133,4 +129,8 @@ async fn handle_input(input: Input) -> Result<Option<libaitfoaq::events::Event>,
 enum Error {
     IO(#[from] std::io::Error),
     Parsing(#[from] serde_json::Error),
+    Game(libaitfoaq::Error),
+}
+impl From<libaitfoaq::Error> for Error {
+    fn from(other: libaitfoaq::Error) -> Self { Self::Game(other) }
 }

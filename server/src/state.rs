@@ -1,11 +1,11 @@
-use axum::extract::ws::WebSocket;
-use tokio::sync::{mpsc, watch};
-
-use libaitfoaq::{events::Event, state::GameState, Error, Game};
+use tokio::sync::{mpsc, watch, oneshot};
 use tokio_util::sync::CancellationToken;
+use thiserror::Error;
+
+use libaitfoaq::{events::Event, state::GameState, Error as GameError, Game};
 
 pub type Out = GameState;
-pub type In = Event;
+pub struct In (Event, oneshot::Sender<GameError>);
 
 #[derive(Debug)]
 pub struct State {
@@ -33,13 +33,32 @@ impl State {
             out_rx,
             in_tx,
             in_rx,
+        };
+        Ok(state)
+    }
+
+    pub async fn send(event: Event, sender: &mpsc::Sender<In>) -> Result<(), GameError> {
+        let (response_tx, response_rx) = oneshot::channel();
+        sender.send(In(event, response_tx)).await.expect("could not send message to internal state processor");
+        if let Ok(response) = response_rx.await {
+            return Err(response);
         }
+        Ok(())
     }
 
     pub async fn process(&mut self, cancellation_token: CancellationToken) {
         loop {
             tokio::select! {
-                Some(event) = self.in_rx.recv() => {dbg!(event);},
+                Some(In(event, response_channel)) = self.in_rx.recv() => {
+                    match self.game.apply(event.clone()) {
+                        Ok(new_state) => {
+                            self.out_tx.send_replace(new_state);
+                        },
+                        Err(error) => {
+                            let _ = response_channel.send(error);
+                        },
+                    }
+                },
                 _ = cancellation_token.cancelled() => { return; },
                 else => { return; },
             }

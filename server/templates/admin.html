@@ -1,12 +1,12 @@
-{% if !is_admin %}
+{% if !connection.is_admin %}
 not admin
 {% else %}
 <fieldset><legend>Admin</legend>
     <label>
         Phase:
-        <input readonly id="phase" value="{{ "{:?}"|format(state.phase) }}">
+        <input readonly id="phase" value="{{ "{:?}"|format(game.phase) }}">
     </label>
-    {% match state.phase %}
+    {% match game.phase %}
         {% when libaitfoaq::state::GamePhase::Preparing %}
             <button
                 ws-send
@@ -15,7 +15,7 @@ not admin
                 Open Lobby
             </button>
         {% when libaitfoaq::state::GamePhase::Connecting %}
-            {% if state.contestants.len() > 0 %}
+            {% if game.contestants.len() > 0 %}
             <button
                 ws-send
                 hx-vals='{"type": "start_game"}'

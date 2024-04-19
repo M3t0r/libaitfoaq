@@ -1,9 +1,14 @@
 use askama_axum::Template;
 use axum::{
-    extract::{ws::WebSocketUpgrade, ConnectInfo, State},
-    http::{header, StatusCode},
+    async_trait,
+    extract::{ws::WebSocketUpgrade, ConnectInfo, State, FromRequestParts},
+    http::{
+        header,
+        StatusCode,
+        request::Parts,
+    },
     response::IntoResponse,
-    routing::{get, post},
+    routing::get,
     Router,
 };
 use tracing_subscriber::prelude::*;
@@ -117,11 +122,37 @@ async fn htmx_ws() -> impl IntoResponse {
 #[tracing::instrument(skip(ws, channels))]
 async fn websocket(
     ConnectInfo(peer_address): ConnectInfo<SocketAddr>,
+    ExtractUserAgent(user_agent): ExtractUserAgent,
+    headers: header::HeaderMap,
     ws: WebSocketUpgrade,
     State(channels): axum::extract::State<StateChannels>,
 ) -> impl IntoResponse {
     tracing::info!(%peer_address, "new websocket connection");
+
+    let json = header::HeaderValue::from_static("application/json");
+    let serializer = match headers.get(header::ACCEPT) {
+        Some(value) if value == json => crate::communication::Serializer::JSON,
+        _ => crate::communication::Serializer::HTML,
+    };
     ws.on_upgrade(move |socket| {
-        crate::communication::player_handler(socket, peer_address, channels)
+        crate::communication::player_handler(socket, peer_address, channels, serializer)
     })
+}
+
+struct ExtractUserAgent(header::HeaderValue);
+
+#[async_trait]
+impl<S> FromRequestParts<S> for ExtractUserAgent
+where
+    S: Send + Sync,
+{
+    type Rejection = (StatusCode, &'static str);
+
+    async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
+        if let Some(user_agent) = parts.headers.get(header::USER_AGENT) {
+            Ok(ExtractUserAgent(user_agent.clone()))
+        } else {
+            Err((StatusCode::BAD_REQUEST, "`User-Agent` header is missing"))
+        }
+    }
 }

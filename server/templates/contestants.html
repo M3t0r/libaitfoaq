@@ -1,5 +1,5 @@
 <ul>
-    {% for c in state.contestants %}
+    {% for c in game.contestants %}
     <li>{{ c.name.as_deref().unwrap_or(c.name_hint)|e }}</li>
     {% endfor %}
 </ul>

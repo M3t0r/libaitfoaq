@@ -3,7 +3,7 @@ use std::net::SocketAddr;
 use crate::state::{State, StateChannels};
 use axum::extract::ws::{Message, WebSocket};
 use askama::Template;
-use libaitfoaq::{events::Event, state::GameState};
+use libaitfoaq::{events::Event, state::{ContestantHandle, GameState}};
 use tokio::select;
 use serde::Deserialize;
 use thiserror::Error;
@@ -18,6 +18,7 @@ pub async fn player_handler(
     let mut connection_state = ConnectionState {
         is_admin: true,
         name: format!("{}", &peer_address),
+        controlling: None,
     };
     let mut state = rx.borrow().clone();
 
@@ -100,6 +101,7 @@ pub async fn player_handler(
 struct ConnectionState {
     is_admin: bool,
     name: String,
+    controlling: Option<ContestantHandle>,
 }
 
 #[derive(Template, serde::Serialize, serde::Deserialize)]

@@ -51,9 +51,9 @@ pub enum Event {
     ConnectContestant { name_hint: String },
     /// Mark a [Contestant] as disconnected. This does not remove them, they can
     /// join at a later time, and optionally halt the game until then.
-    DisconnectContestant,
+    DisconnectContestant { contestant: ContestantHandle },
     /// Reconnect a [Contestant] and resume the game.
-    ReconnectContestant,
+    ReconnectContestant { contestant: ContestantHandle },
     /// Properly name a [Contestant]. This might happen during an introduction
     /// round. Can also happen after [GamePhase::Connecting].
     NameContestant { index: usize, name: String },

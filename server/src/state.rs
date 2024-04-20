@@ -8,7 +8,7 @@ use std::path::Path;
 use std::io::Write;
 
 pub type Out = GameState;
-pub struct In (Event, oneshot::Sender<GameError>);
+pub struct In (Event, oneshot::Sender<Result<GameState, GameError>>);
 
 #[derive(Debug)]
 pub struct State<'a> {
@@ -38,6 +38,7 @@ impl<'a> State<'a> {
                 let event = event.map_err(|e| Error::Parsing(journal_path.to_owned(), e))?;
                 game.apply(event).map_err(|e| Error::Loading(journal_path.to_owned(), e))?;
             }
+            game.mark_all_contestants_as_disconnected();
         }
 
         let journal_writer = std::fs::OpenOptions::new()
@@ -62,13 +63,10 @@ impl<'a> State<'a> {
         Ok(state)
     }
 
-    pub async fn send(event: Event, sender: &mpsc::Sender<In>) -> Result<(), GameError> {
+    pub async fn send(event: Event, sender: &mpsc::Sender<In>) -> Result<GameState, GameError> {
         let (response_tx, response_rx) = oneshot::channel();
         sender.send(In(event, response_tx)).await.expect("could not send message to internal state processor");
-        if let Ok(response) = response_rx.await {
-            return Err(response);
-        }
-        Ok(())
+        response_rx.await.expect("Can't receive answer from state processor")
     }
 
     pub async fn process(&mut self, cancellation_token: CancellationToken) {
@@ -78,10 +76,11 @@ impl<'a> State<'a> {
                     match self.game.apply(event.clone()) {
                         Ok(new_state) => {
                             self.write_to_journal(event).await.expect("Can't write to journal");
+                            let _ = response_channel.send(Ok(new_state.clone()));
                             self.out_tx.send_replace(new_state);
                         },
                         Err(error) => {
-                            let _ = response_channel.send(error);
+                            let _ = response_channel.send(Err(error));
                         },
                     }
                 },

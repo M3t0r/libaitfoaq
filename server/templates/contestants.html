@@ -1,5 +1,8 @@
 <ul>
     {% for c in game.contestants %}
-    <li>{{ c.name.as_deref().unwrap_or(c.name_hint)|e }}</li>
+    <li>
+        {{- c.name.as_deref().unwrap_or(c.name_hint)|e -}}
+        {% if !c.connected %}&nbsp;(disconnected){% endif -%}
+    </li>
     {% endfor %}
 </ul>

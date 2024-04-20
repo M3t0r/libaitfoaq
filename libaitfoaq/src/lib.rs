@@ -32,6 +32,8 @@ impl Game {
             Event::LoadBoard(board) => self.load_board(board)?,
             Event::OpenLobby => self.open_lobby()?,
             Event::ConnectContestant { name_hint } => self.connect_contestant(name_hint)?,
+            Event::ReconnectContestant { contestant } => self.reconnect_contestant(contestant)?,
+            Event::DisconnectContestant { contestant } => self.disconnect_contestant(contestant)?,
             Event::NameContestant { index, name } => self.name_contestant(index, name)?,
             Event::StartGame => self.start_game()?,
             Event::Pick { clue } => self.pick(clue)?,
@@ -53,6 +55,13 @@ impl Game {
             board: self.board.clone(),
             phase: self.phase.clone(),
             options: self.options.clone(),
+        }
+    }
+
+    /// When loading game state from a file, no contestants are actually connected
+    pub fn mark_all_contestants_as_disconnected(&mut self) {
+        for c in self.contestants.iter_mut() {
+            c.connected = false;
         }
     }
 
@@ -92,7 +101,23 @@ impl Game {
         Ok(())
     }
 
-    fn name_contestant(&mut self, index: usize, name: String) -> Result<(), Error> {
+    fn reconnect_contestant(&mut self, index: ContestantHandle) -> Result<(), Error> {
+        self.contestants
+            .get_mut(index)
+            .ok_or(Error::ContestantNotFound)?
+            .connected = true;
+        Ok(())
+    }
+
+    fn disconnect_contestant(&mut self, index: ContestantHandle) -> Result<(), Error> {
+        self.contestants
+            .get_mut(index)
+            .ok_or(Error::ContestantNotFound)?
+            .connected = false;
+        Ok(())
+    }
+
+    fn name_contestant(&mut self, index: ContestantHandle, name: String) -> Result<(), Error> {
         self.contestants
             .get_mut(index)
             .ok_or(Error::ContestantNotFound)?

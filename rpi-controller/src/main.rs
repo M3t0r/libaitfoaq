@@ -149,15 +149,21 @@ impl HandsetCommunicator {
             tokio::select! {
                 _ = cancellation_token.cancelled() => { return; },
                 Ok(_) = switch_rx.changed() => {
-                    println!("{}: switch activated", self.id);
                     if self.connection.is_disconnected() {
                         let new = !*self.led_tx.borrow();
                         self.led_tx.send_replace(new);
+                    } else {
+                        if let Some(me) = self.connection.me_index() {
+                            let response = serde_json::json!({
+                                "type": "buzz",
+                                "contestant": me,
+                            }).to_string();
+                            self.connection.send(&response).await;
+                        }
                     }
                 },
                 Ok(_) = presence_rx.changed() => {
                     let presence = *presence_rx.borrow();
-                    println!("{}: presence changed: {}", self.id, presence);
                     if !presence { self.connection.disconnect() }
                 },
                 msg = self.connection.receive(auto_reconnect) => {
@@ -196,10 +202,11 @@ impl HandsetCommunicator {
 enum SocketState {
     Unconnected,
     Connected{socket: Websocket},
-    Registered{socket: Websocket, me: Contestant},
+    Registered{socket: Websocket, me: (usize, Contestant)},
 }
 impl SocketState {
-    fn register(&mut self, me: Contestant) {
+    fn register(&mut self, me_index: usize, me: Contestant) {
+        let me = (me_index, me);
         // https://stackoverflow.com/a/45119209/371128
         let old = std::mem::replace(self, Self::Unconnected);
         *self = match old {
@@ -223,7 +230,14 @@ impl Connection {
         match &self.inner {
             SocketState::Unconnected => None,
             SocketState::Connected { .. } => None,
-            SocketState::Registered { me, .. } => Some(me),
+            SocketState::Registered { me: (_, me), .. } => Some(me),
+        }
+    }
+    fn me_index(&self) -> Option<usize> {
+        match &self.inner {
+            SocketState::Unconnected => None,
+            SocketState::Connected { .. } => None,
+            SocketState::Registered { me: (me_index, _), .. } => Some(*me_index),
         }
     }
     fn is_disconnected(&self) -> bool {
@@ -301,7 +315,7 @@ impl Connection {
                     self.disconnect();
                     return None;
                 };
-                self.inner.register(me.clone());
+                self.inner.register(i, me.clone());
             },
         }
 

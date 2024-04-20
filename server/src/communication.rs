@@ -229,6 +229,7 @@ enum Input {
     StartGame,
     ConnectContestant { name_hint: String },
     ReconnectContestant { contestant: ContestantHandle },
+    Buzz { contestant: ContestantHandle },
 }
 
 async fn handle_input(input: Input) -> Result<Option<libaitfoaq::events::Event>, Error> {
@@ -243,6 +244,7 @@ async fn handle_input(input: Input) -> Result<Option<libaitfoaq::events::Event>,
         Input::StartGame => Ok(Some(Event::StartGame)),
         Input::ConnectContestant { name_hint } => Ok(Some(Event::ConnectContestant { name_hint })),
         Input::ReconnectContestant { contestant } => Ok(Some(Event::ReconnectContestant { contestant })),
+        Input::Buzz { contestant } => Ok(Some(Event::Buzz { contestant })),
     }
 }
 

@@ -363,7 +363,12 @@ async fn main() -> std::result::Result<(), std::boxed::Box<dyn std::error::Error
         .expect("Can't build a machine id");
     machine_id.truncate(16);
 
-    let uri: Uri = "ws://localhost:3000/websocket".parse().unwrap();
+    let uri: Uri = std::env::args()
+        .nth(1)
+        .expect(&format!("usage: {} <ws-address>", env!("CARGO_BIN_NAME")))
+        .parse()
+        .expect("Could not parse ws-address");
+    println!("connecting to {:?}", uri);
 
     let mut handsets: Vec<Handset> = [
         PinTiples::new(21, 20, 26),

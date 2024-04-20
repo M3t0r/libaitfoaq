@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use rppal::gpio::{Gpio, InputPin, OutputPin, Error as GPIOError};
 use tokio::sync::watch;
-use tokio::time::{Interval, MissedTickBehavior, interval};
+use tokio::time::{sleep, Interval, MissedTickBehavior, interval};
 use tokio_tungstenite::tungstenite::handshake::client::{generate_key, Request};
 use tokio_tungstenite::tungstenite::Message;
 use tokio_tungstenite::tungstenite::http::Uri;
@@ -167,12 +167,19 @@ impl HandsetCommunicator {
                             .any(|c| c.name_hint == self.id)
                         {
                             // contestant with our name found, reconnect
-                            "blubber".to_owned()
+                            serde_json::json!({
+                                "type": "reconnect_contestant",
+                                "contestant": 0,
+                            }).to_string()
                         } else {
                             // no contestant with our name, register
-                            "blabber".to_owned()
+                            serde_json::json!({
+                                "type": "connect_contestant",
+                                "name_hint": self.id,
+                            }).to_string()
                         };
                         self.connection.send(&response).await;
+                        sleep(Duration::from_secs(1)).await;
                         continue;
                     };
                     let my_led = *self.led_tx.borrow();
@@ -305,7 +312,7 @@ impl Connection {
             return;
         }
         match tokio_tungstenite::connect_async(build_request(self.uri.to_owned())).await {
-            Err(e) => {dbg!(e);},
+            Err(e) => { println!("{}: failure to connect: {}", self.id, e); },
             Ok((s,_)) => self.inner = SocketState::Connected { socket: s },
         }
     }

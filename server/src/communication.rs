@@ -51,7 +51,10 @@ pub async fn player_handler(
                         tracing::info!(%connection_state.name, "socket was closed");
                         return;
                     },
-                    Message::Ping(payload) => Some(Message::Pong(payload)),
+                    Message::Ping(payload) => {
+                        // tracing::trace!(%connection_state.name, "received ping");
+                        Some(Message::Pong(payload))
+                    },
                     Message::Pong(payload) => todo!("keep track of pongs"),
                     Message::Binary(_) => {
                         tracing::warn!(%connection_state.name, "received binary data instead of textual data");

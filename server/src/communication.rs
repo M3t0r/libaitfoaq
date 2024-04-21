@@ -1,12 +1,16 @@
-use std::net::SocketAddr;
+use std::{collections::HashMap, net::SocketAddr, time::{Duration}};
 
 use crate::state::{State, StateChannels};
 use axum::extract::ws::{Message, WebSocket};
 use askama::Template;
 use libaitfoaq::{events::Event, state::{ContestantHandle, GameState}};
-use tokio::select;
+use tokio::{select, time::{interval, Instant, Interval}};
 use serde::Deserialize;
 use thiserror::Error;
+
+const PING_INTERVAL: Duration= Duration::from_millis(1000);
+const PING_WINDOW: Duration = Duration::from_millis(5000);
+const PING_MISSES: usize = 3;
 
 #[tracing::instrument(skip(socket, rx, tx))]
 pub async fn player_handler(
@@ -15,6 +19,7 @@ pub async fn player_handler(
     StateChannels{rx, tx}: StateChannels,
     serializer: Serializer,
 ) {
+    let name = format!("{}", &peer_address);
     let mut connection = Connection {
         should_disconnect: false,
         socket,
@@ -23,9 +28,10 @@ pub async fn player_handler(
         serializer,
         state: ConnectionState {
             is_admin: true,
-            name: format!("{}", &peer_address),
+            name: name.to_owned(),
             controlling: None,
         },
+        pinger: Pinger::from(name),
     };
     let state = connection.rx.borrow().clone();
 
@@ -46,7 +52,12 @@ pub async fn player_handler(
         select! {
             msg = connection.socket.recv() => { connection.handle_message(msg).await; },
             Ok(_) = connection.rx.changed() => { connection.handle_new_game_state().await; }
-            // todo: send ping messages in an interval
+            _ = connection.pinger.tick() => {
+                match connection.pinger.next() {
+                    Ok(payload) => { connection.send_msg(Message::Ping(payload)).await; },
+                    Err(e) => { connection.disconnect(e, "Too many missed pings").await; }
+                }
+            },
         }
     }
 
@@ -62,6 +73,7 @@ struct Connection {
     rx: tokio::sync::watch::Receiver<crate::state::Out>,
     serializer: Serializer,
     state: ConnectionState,
+    pinger: Pinger,
 }
 
 impl Connection {
@@ -91,7 +103,11 @@ impl Connection {
                 // tracing::trace!(%self.state.name, "received ping");
                 self.send_msg(Message::Pong(payload)).await;
             },
-            Message::Pong(payload) => todo!("keep track of pongs"),
+            Message::Pong(payload) => {
+                if let Some(rtt_latency) = self.pinger.received(payload) {
+                    // tracing::trace!(%self.state.name, ?rtt_latency);
+                }
+            },
             Message::Binary(_) => {
                 tracing::warn!(%self.state.name, "received binary data instead of textual data");
                 return;
@@ -167,6 +183,50 @@ impl Connection {
     async fn disconnect_without_error(&mut self, reason: &str) {
         tracing::info!(%self.state.name, %reason, "disconnecting");
         self.should_disconnect = true; // stop the main loop
+    }
+}
+
+struct Pinger {
+    name: String,
+    counter: u64,
+    interval: Interval,
+    outstanding: HashMap<Vec<u8>, Instant>,
+}
+
+impl Pinger {
+    fn from(name: String) -> Self {
+        let mut interval = interval(PING_INTERVAL);
+        interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
+        Self {
+            name: format!("{}-{:?}", name, Instant::now()),
+            counter: 0,
+            interval,
+            outstanding: HashMap::with_capacity(5),
+        }
+    }
+    async fn tick(&mut self) { self.interval.tick().await; }
+    fn next(&mut self) -> Result<Vec<u8>, Error> {
+        self.outstanding.retain(|_, t| t.elapsed() < PING_WINDOW);
+        if self.outstanding.len() >= PING_MISSES {
+            return Err(Error::MissedPings(
+                self.outstanding.values()
+                    .map(|i| i.elapsed())
+                    .collect()
+            ));
+        }
+
+        let payload: Vec<u8> = format!("{}:{}", self.name, self.counter).into();
+        self.counter += 1;
+        self.outstanding.insert(payload.to_owned(), Instant::now());
+        Ok(payload)
+    }
+    fn received(&mut self, payload: Vec<u8>) -> Option<Duration> {
+        // tracing::trace!(
+        //     received = %String::from_utf8_lossy(&payload),
+        //     outstanding = ?self.outstanding.keys().map(|v| String::from_utf8_lossy(&v)).collect::<Vec<_>>(),
+        //     "outstanding pings"
+        // );
+        self.outstanding.remove(&payload).map(|t| t.elapsed())
     }
 }
 
@@ -253,6 +313,7 @@ async fn handle_input(input: Input) -> Result<Option<libaitfoaq::events::Event>,
 enum Error {
     IO(#[from] std::io::Error),
     Network(#[from] axum::Error),
+    MissedPings(Vec<Duration>),
     Parsing(#[from] serde_json::Error),
     Rendering(#[from] askama::Error),
     Game(libaitfoaq::Error),

@@ -65,7 +65,7 @@ main {
     display: grid;
     grid:
         "b b b a"
-        "c c c a" minmax(5rem, auto)
+        "c c c a" minmax(5rem, max-content)
         / 1fr 1fr 1fr 1fr;
     gap: 1rem;
 
@@ -151,10 +151,11 @@ main {
     }
     th {
         text-transform: uppercase;
+        text-decoration: underline;
     }
     th, td {
         padding: 0.5rem;
-        vertical-align: center;
+        vertical-align: middle;
         text-align: center;
         border: 1px solid var(--primary);
     }

@@ -1,8 +1,12 @@
 <ul>
     {% for c in game.contestants %}
-    <li>
-        {{- c.name.as_deref().unwrap_or(c.name_hint)|e -}}
-        {% if !c.connected %}&nbsp;(disconnected){% endif -%}
+    <li class="contestant {%- if c.indicate %} indicated{% endif -%}{%- if !c.connected %} disconnected{% endif -%}">
+        <div class="flex-container">
+            <span class="name" {%- if !c.connected %} title="disconnected"{% endif -%}>
+                  {{- c.name.as_deref().unwrap_or(c.name_hint)|e -}}
+            </span>
+            <span class="points">{{ c.points }}</span>
+        </div>
     </li>
     {% endfor %}
 </ul>

@@ -104,3 +104,38 @@ body {
 #errors.hide {
     display:none;
 }
+#contestants {
+    ul {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+    li {
+        flex: 14rem;
+        text-align: center;
+        margin: 0;
+        padding 1rem;
+    }
+    li.indicated {
+        background: var(--accent);
+    }
+    li.disconnected {
+        filter: brightness(70%);
+        .name {
+            text-decoration: underline wavy var(--text);
+        }
+    }
+    li .flex-container {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        align-items: bottom;
+    }
+    li span {
+        flex: 2rem;
+    }
+}

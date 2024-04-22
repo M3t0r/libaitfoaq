@@ -26,7 +26,7 @@
                 hx-vals='{"type": "start_game"}'
             >Start Game!</button>
             {% endif %}
-        {% when GamePhase::Clue with { clue: _, exclusive: _ }%}
+        {% when GamePhase::Clue with { clue: clue, exclusive: _ }%}
             <button
                 ws-send
                 hx-vals='{"type": "clue_fully_shown"}'
@@ -36,12 +36,20 @@
                 ws-send
                 hx-vals='{"type": "finish_clue"}'
             >Finish</button>
-        {% when GamePhase::Buzzing with { clue: _ }%}
+            <br>
+            {{ game.board.get(clue).unwrap().response }}
+            <hr>
+            {{ game.board.get(clue).unwrap().hint }}
+        {% when GamePhase::Buzzing with { clue: clue }%}
             <button
                 ws-send
                 hx-vals='{"type": "finish_clue"}'
             >Finish without answer</button>
-        {% when GamePhase::Buzzed with { clue: _, contestant: _ }%}
+            <br>
+            {{ game.board.get(clue).unwrap().response }}
+            <hr>
+            {{ game.board.get(clue).unwrap().hint }}
+        {% when GamePhase::Buzzed with { clue: clue, contestant: _ }%}
             <button
                 ws-send
                 hx-vals='{"type": "accept_answer"}'
@@ -56,7 +64,11 @@
                 ws-send
                 hx-vals='{"type": "finish_clue"}'
             >Finish</button>
-        {% when GamePhase::Resolution with { clue: _, contestant: _, show_hint }%}
+            <br>
+            {{ game.board.get(clue).unwrap().response }}
+            <hr>
+            {{ game.board.get(clue).unwrap().hint }}
+        {% when GamePhase::Resolution with { clue: clue, contestant: _, show_hint }%}
             <button
                 ws-send
                 hx-vals='{"type": "finish_clue"}'
@@ -67,6 +79,10 @@
                 ws-send
                 hx-vals='{"type": "reveal_hint"}'
             >Reveal Hint</button>
+            <br>
+            {{ game.board.get(clue).unwrap().response }}
+            <hr>
+            {{ game.board.get(clue).unwrap().hint }}
             {%- endif %}
         {% else %}
     {% endmatch %}

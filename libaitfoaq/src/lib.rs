@@ -158,7 +158,7 @@ impl Game {
         };
         self.phase = GamePhase::Clue {
             clue,
-            exclusive: self.board.get(clue)?.exclusive.then_some(contestant),
+            exclusive: self.board.get(&clue)?.exclusive.then_some(contestant),
         };
         Ok(())
     }
@@ -227,7 +227,7 @@ impl Game {
                 is: self.phase.clone(),
             });
         };
-        let points = self.board.get(clue)?.points;
+        let points = self.board.get(&clue)?.points;
         let c = self.contestants.get_mut(contestant).ok_or(Error::ContestantNotFound)?;
         c.points += points;
         c.indicate = false;
@@ -241,7 +241,7 @@ impl Game {
                 is: self.phase.clone(),
             });
         };
-        let points = self.board.get(clue)?.points;
+        let points = self.board.get(&clue)?.points;
         let c = self.contestants.get_mut(contestant).ok_or(Error::ContestantNotFound)?;
         c.points -= points;
         c.indicate = false;
@@ -262,19 +262,19 @@ impl Game {
     fn finish_clue(&mut self) -> Result<(), Error> {
         match self.phase {
             GamePhase::Clue { clue, exclusive } => {
-                self.board.mark_solved(clue)?;
+                self.board.mark_solved(&clue)?;
                 self.phase = self.next_or_end(exclusive);
             }
             GamePhase::Buzzing { clue } => {
-                self.board.mark_solved(clue)?;
+                self.board.mark_solved(&clue)?;
                 self.phase = self.next_or_end(None);
             }
             GamePhase::Buzzed { clue, contestant } => {
-                self.board.mark_solved(clue)?;
+                self.board.mark_solved(&clue)?;
                 self.phase = GamePhase::Resolution { clue, contestant, show_hint: false };
             }
             GamePhase::Resolution { clue, contestant, .. } => {
-                self.board.mark_solved(clue)?;
+                self.board.mark_solved(&clue)?;
                 self.phase = self.next_or_end(Some(contestant));
             }
             _ => {

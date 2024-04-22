@@ -18,7 +18,7 @@ pub struct Board {
 }
 
 impl Board {
-    pub fn get(&self, clue: ClueHandle) -> Result<&Clue, super::Error> {
+    pub fn get(&self, clue: &ClueHandle) -> Result<&Clue, super::Error> {
         Ok(self
             .categories
             .get(clue.0)
@@ -28,7 +28,7 @@ impl Board {
             .ok_or(super::Error::ClueNotFound)?)
     }
 
-    pub fn get_mut(&mut self, clue: ClueHandle) -> Result<&mut Clue, super::Error> {
+    pub fn get_mut(&mut self, clue: &ClueHandle) -> Result<&mut Clue, super::Error> {
         Ok(self
             .categories
             .get_mut(clue.0)
@@ -38,7 +38,7 @@ impl Board {
             .ok_or(super::Error::ClueNotFound)?)
     }
 
-    pub fn mark_solved(&mut self, clue: ClueHandle) -> Result<(), super::Error> {
+    pub fn mark_solved(&mut self, clue: &ClueHandle) -> Result<(), super::Error> {
         self.get_mut(clue)?.solved = true;
         Ok(())
     }

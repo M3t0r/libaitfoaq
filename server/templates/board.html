@@ -22,7 +22,7 @@
     {% endfor %}
 </table>
 {%- macro clue(handle, show_hint) -%}
-    {%- let clue = game.board.get(handle.clone()).unwrap() -%}
+    {%- let clue = game.board.get(handle).unwrap() -%}
     <div id="clue">
         <span>{{ clue.clue }}</span>
         {%- if show_hint %}
@@ -38,7 +38,14 @@
     {% call clue(c, false) %}
 {% when GamePhase::Buzzed with { clue: c, contestant: _ } %}
     {% call clue(c, false) %}
-{% when GamePhase::Resolution with { clue: c, contestant: _, show_hint: h } %}
-    {% call clue(c, h) %}
+{% when GamePhase::Resolution with { clue: clue, contestant: _, show_hint: show_hint } %}
+    {%- let clue = game.board.get(clue).unwrap() -%}
+    <div id="clue">
+        <span>{{ clue.response }}</span>
+        {%- if show_hint %}
+        <hr>
+        <span>{{ clue.hint }}</span>
+        {% endif %}
+    </div>
 {% else %}
 {% endmatch %}

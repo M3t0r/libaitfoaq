@@ -9,7 +9,7 @@
     {% for r in game.board.clue_rows() %}
     <tr>
         {% for (h,c) in r %}
-            {% if c.solved %}<td></td>{% else %}
+            {% if c.solved %}<td>&nbsp;</td>{% else %}
             <td
                 ws-send
                 hx-trigger="click"

@@ -79,11 +79,24 @@ body {
     display:inline;
 }
 
+.clickable {
+    cursor: pointer;
+}
+
 #errors {
     color: red;
     font-size: 16pt;
     font-weight: 800;
-    cursor: pointer;
+
+    background: var(--background);
+    border: 1px solid var(--primary);
+    border-radius: 1rem;
+    padding: 0.5rem;
+
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 5;
 }
 #errors.old {
     color: grey;

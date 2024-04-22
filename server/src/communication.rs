@@ -1,4 +1,4 @@
-use std::{collections::HashMap, net::SocketAddr, time::{Duration}};
+use std::{collections::HashMap, net::SocketAddr, num::ParseIntError, time::Duration};
 
 use crate::state::{State, StateChannels};
 use axum::extract::ws::{Message, WebSocket};
@@ -296,6 +296,9 @@ enum Input {
     RejectAnswer,
     RevealHint,
     FinishClue,
+    NameContestant { contestant: ContestantHandle, name: String },
+    AwardPoints { contestant: ContestantHandle, points: String },
+    RevokePoints { contestant: ContestantHandle, points: String },
 }
 
 async fn handle_input(input: Input) -> Result<Option<libaitfoaq::events::Event>, Error> {
@@ -317,6 +320,19 @@ async fn handle_input(input: Input) -> Result<Option<libaitfoaq::events::Event>,
         Input::RejectAnswer => Ok(Some(Event::RejectAnswer)),
         Input::RevealHint => Ok(Some(Event::RevealHint)),
         Input::FinishClue => Ok(Some(Event::FinishClue)),
+        Input::NameContestant { contestant, name } => Ok(Some(Event::NameContestant { index: contestant, name })),
+        Input::AwardPoints { contestant, points } => {
+            Ok(Some(Event::AwardPoints{
+                contestant,
+                points: points.parse()?,
+            }))
+        },
+        Input::RevokePoints { contestant, points } => {
+            Ok(Some(Event::RevokePoints{
+                contestant,
+                points: points.parse()?,
+            }))
+        },
     }
 }
 
@@ -327,6 +343,7 @@ enum Error {
     Network(#[from] axum::Error),
     MissedPings(Vec<Duration>),
     Parsing(#[from] serde_json::Error),
+    NumberParsing(#[from] ParseIntError),
     Rendering(#[from] askama::Error),
     Game(libaitfoaq::Error),
 }

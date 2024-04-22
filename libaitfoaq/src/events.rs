@@ -57,6 +57,10 @@ pub enum Event {
     /// Properly name a [Contestant]. This might happen during an introduction
     /// round. Can also happen after [GamePhase::Connecting].
     NameContestant { index: usize, name: String },
+    /// Add points to the contestant's score
+    AwardPoints { contestant: ContestantHandle, points: u32 },
+    /// Subtract points from the contestant's score
+    RevokePoints { contestant: ContestantHandle, points: u32 },
     /// Transition from [GamePhase::Connecting] to [GamePhase::Picking]. No new
     /// [Contestants](Contestant) can connect afterwards.
     StartGame,

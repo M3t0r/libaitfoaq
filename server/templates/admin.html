@@ -71,4 +71,26 @@
         {% else %}
     {% endmatch %}
 </fieldset>
+<fieldset><legend>Players</legend>
+    {% for c in game.contestants %}
+    <input
+        type="text" value="{{c.name.as_deref().unwrap_or("")}}" placeholder="{{c.name_hint}}"
+        ws-send name="name"
+        hx-vals='{"type": "name_contestant", "contestant": {{loop.index0}} }'
+    ><br>
+    <input name="points" type="number" value="100" step="100" min="100">
+    <button
+        ws-send
+        hx-trigger="click, keydown[code=='Enter'] throttle:1s from:previous"
+        hx-include="previous input[name='points']"
+        hx-vals='{"type": "award_points", "contestant": {{loop.index0}} }'
+    >+</button>
+    <button
+        ws-send
+        hx-include="previous input[name='points']"
+        hx-vals='{"type": "revoke_points", "contestant": {{loop.index0}} }'
+    >-</button><br>
+    {% if !loop.last %}<hr>{% endif %}
+    {% endfor %}
+</fieldset>
 {% endif %}

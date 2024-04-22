@@ -35,6 +35,8 @@ impl Game {
             Event::ReconnectContestant { contestant } => self.reconnect_contestant(contestant)?,
             Event::DisconnectContestant { contestant } => self.disconnect_contestant(contestant)?,
             Event::NameContestant { index, name } => self.name_contestant(index, name)?,
+            Event::AwardPoints { contestant, points } => self.modify_score(contestant, points as i32)?,
+            Event::RevokePoints { contestant, points } => self.modify_score(contestant, -1*(points as i32))?,
             Event::StartGame => self.start_game()?,
             Event::Pick { clue } => self.pick(clue)?,
             Event::ClueFullyShown => self.clue_fully_shown()?,
@@ -122,6 +124,14 @@ impl Game {
             .get_mut(index)
             .ok_or(Error::ContestantNotFound)?
             .name = Some(name);
+        Ok(())
+    }
+
+    fn modify_score(&mut self, index: ContestantHandle, points: Points) -> Result<(), Error> {
+        self.contestants
+            .get_mut(index)
+            .ok_or(Error::ContestantNotFound)?
+            .points += points;
         Ok(())
     }
 

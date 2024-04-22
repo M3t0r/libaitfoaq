@@ -193,8 +193,8 @@ impl Game {
                 };
                 Ok(())
             }
-            // allow toggling the indication lights in the lobby
-            GamePhase::Connecting => {
+            // allow toggling the indication lights in the lobby and the end
+            GamePhase::Connecting | GamePhase::Score => {
                 self.contestants
                     .get_mut(contestant_index)
                     .ok_or(Error::ContestantNotFound)?

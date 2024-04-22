@@ -169,21 +169,20 @@ impl HandsetCommunicator {
                 msg = self.connection.receive(auto_reconnect) => {
                     let Some(msg) = msg else { continue };
                     let Some(me) = self.connection.me() else {
-                        let response = if msg.game.contestants.iter()
-                            .any(|c| c.name_hint == self.id)
+                        // register a new contestant by default
+                        let mut response = serde_json::json!({
+                            "type": "connect_contestant",
+                            "name_hint": self.id,
+                        }).to_string();
+                        if let Some(index) = msg.game.contestants.iter()
+                            .position(|c| c.name_hint == self.id)
                         {
-                            // contestant with our name found, reconnect
-                            serde_json::json!({
+                            // contestant with our name found, reconnect instead
+                            response = serde_json::json!({
                                 "type": "reconnect_contestant",
-                                "contestant": 0,
-                            }).to_string()
-                        } else {
-                            // no contestant with our name, register
-                            serde_json::json!({
-                                "type": "connect_contestant",
-                                "name_hint": self.id,
-                            }).to_string()
-                        };
+                                "contestant": index,
+                            }).to_string();
+                        }
                         self.connection.send(&response).await;
                         sleep(Duration::from_secs(1)).await;
                         continue;
@@ -300,7 +299,7 @@ impl Connection {
         };
         let msg = match serde_json::from_str::<ServerState>(&msg) {
             Err(e) => {
-                println!("{}: error parsing server message: {:?}", self.id, e);
+                println!("{}: error parsing server message: {:?}: {}", self.id, e, msg);
                 return None;
             },
             Ok(msg) => msg,

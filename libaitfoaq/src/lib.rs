@@ -217,30 +217,35 @@ impl Game {
                 is: self.phase.clone(),
             });
         };
-        self.contestants
-            .get_mut(contestant)
-            .ok_or(Error::ContestantNotFound)?
-            .points += self.board.get(clue)?.points;
-        self.phase = GamePhase::Resolution { clue, contestant };
+        let points = self.board.get(clue)?.points;
+        let c = self.contestants.get_mut(contestant).ok_or(Error::ContestantNotFound)?;
+        c.points += points;
+        c.indicate = false;
+        self.phase = GamePhase::Resolution { clue, contestant, show_hint: false };
         Ok(())
     }
 
     fn reject_answer(&mut self) -> Result<(), Error> {
-        let GamePhase::Buzzed { clue, .. } = self.phase else {
+        let GamePhase::Buzzed { clue, contestant } = self.phase else {
             return Err(Error::WrongPhase {
                 is: self.phase.clone(),
             });
         };
+        let points = self.board.get(clue)?.points;
+        let c = self.contestants.get_mut(contestant).ok_or(Error::ContestantNotFound)?;
+        c.points -= points;
+        c.indicate = false;
         self.phase = GamePhase::Buzzing { clue };
         Ok(())
     }
 
     fn reveal_hint(&mut self) -> Result<(), Error> {
-        if !matches!(&self.phase, GamePhase::Resolution { .. }) {
+        let GamePhase::Resolution { clue, contestant, .. } = self.phase else {
             return Err(Error::WrongPhase {
                 is: self.phase.clone(),
             });
-        }
+        };
+        self.phase = GamePhase::Resolution { clue, contestant, show_hint: true };
         Ok(())
     }
 
@@ -256,9 +261,9 @@ impl Game {
             }
             GamePhase::Buzzed { clue, contestant } => {
                 self.board.mark_solved(clue)?;
-                self.phase = GamePhase::Resolution { clue, contestant };
+                self.phase = GamePhase::Resolution { clue, contestant, show_hint: false };
             }
-            GamePhase::Resolution { clue, contestant } => {
+            GamePhase::Resolution { clue, contestant, .. } => {
                 self.board.mark_solved(clue)?;
                 self.phase = self.next_or_end(Some(contestant));
             }
@@ -268,6 +273,9 @@ impl Game {
                 })
             }
         };
+        for c in self.contestants.iter_mut() {
+            c.indicate = false;
+        }
         Ok(())
     }
 

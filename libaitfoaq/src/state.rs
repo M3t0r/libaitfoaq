@@ -139,6 +139,7 @@ pub enum GamePhase {
     Resolution {
         clue: ClueHandle,
         contestant: ContestantHandle,
+        show_hint: bool,
     },
     /// After all clues are played the final score is shown. Either just
     /// all players with their points, or a representation of the board showing

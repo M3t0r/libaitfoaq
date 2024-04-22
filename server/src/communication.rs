@@ -291,6 +291,11 @@ enum Input {
     ReconnectContestant { contestant: ContestantHandle },
     Buzz { contestant: ContestantHandle },
     Pick { clue: ClueHandle },
+    ClueFullyShown,
+    AcceptAnswer,
+    RejectAnswer,
+    RevealHint,
+    FinishClue,
 }
 
 async fn handle_input(input: Input) -> Result<Option<libaitfoaq::events::Event>, Error> {
@@ -307,6 +312,11 @@ async fn handle_input(input: Input) -> Result<Option<libaitfoaq::events::Event>,
         Input::ReconnectContestant { contestant } => Ok(Some(Event::ReconnectContestant { contestant })),
         Input::Buzz { contestant } => Ok(Some(Event::Buzz { contestant })),
         Input::Pick { clue } => Ok(Some(Event::Pick { clue })),
+        Input::ClueFullyShown => Ok(Some(Event::ClueFullyShown)),
+        Input::AcceptAnswer => Ok(Some(Event::AcceptAnswer)),
+        Input::RejectAnswer => Ok(Some(Event::RejectAnswer)),
+        Input::RevealHint => Ok(Some(Event::RevealHint)),
+        Input::FinishClue => Ok(Some(Event::FinishClue)),
     }
 }
 

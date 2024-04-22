@@ -3,7 +3,7 @@ use std::{collections::HashMap, net::SocketAddr, time::{Duration}};
 use crate::state::{State, StateChannels};
 use axum::extract::ws::{Message, WebSocket};
 use askama::Template;
-use libaitfoaq::{events::Event, state::{ContestantHandle, GameState}};
+use libaitfoaq::{events::Event, state::{ClueHandle, ContestantHandle, GameState, GamePhase}};
 use tokio::{select, time::{interval, Instant, Interval}};
 use serde::Deserialize;
 use thiserror::Error;
@@ -290,6 +290,7 @@ enum Input {
     ConnectContestant { name_hint: String },
     ReconnectContestant { contestant: ContestantHandle },
     Buzz { contestant: ContestantHandle },
+    Pick { clue: ClueHandle },
 }
 
 async fn handle_input(input: Input) -> Result<Option<libaitfoaq::events::Event>, Error> {
@@ -305,6 +306,7 @@ async fn handle_input(input: Input) -> Result<Option<libaitfoaq::events::Event>,
         Input::ConnectContestant { name_hint } => Ok(Some(Event::ConnectContestant { name_hint })),
         Input::ReconnectContestant { contestant } => Ok(Some(Event::ReconnectContestant { contestant })),
         Input::Buzz { contestant } => Ok(Some(Event::Buzz { contestant })),
+        Input::Pick { clue } => Ok(Some(Event::Pick { clue })),
     }
 }
 

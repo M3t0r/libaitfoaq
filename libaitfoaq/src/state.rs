@@ -45,12 +45,12 @@ impl Board {
 }
 
 impl Board {
-    pub fn clue_rows(&self) -> Vec<Vec<Clue>> {
+    pub fn clue_rows(&self) -> Vec<Vec<(ClueHandle, Clue)>> {
         if self.categories.len() == 0 {
             return vec![];
         }
         (0..self.categories[0].clues.len())
-            .map(|r| self.categories.iter().map(move |c| c.clues[r].clone()).collect()).collect()
+            .map(|r| self.categories.iter().enumerate().map(move |(i,c)| ((i,r), c.clues[r].clone())).collect()).collect()
     }
 }
 

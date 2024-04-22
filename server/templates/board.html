@@ -1,16 +1,44 @@
-<div id="board">
+{%- let control = connection.is_admin -%}{# todo: let player in Picking phase control too #}
+{%- let controllabel_td_attrs = "" -%}
 <table>
     <tr>
     {% for c in game.board.categories %}
-        <td>{{ c.title }}</td>
+        <th>{{ c.title }}</th>
     {% endfor %}
     </tr>
     {% for r in game.board.clue_rows() %}
     <tr>
-        {% for c in r %}
-            <td>{{ c.points }}</td>
+        {% for (h,c) in r %}
+            {% if c.solved %}<td></td>{% else %}
+            <td
+                ws-send
+                hx-trigger="click"
+                hx-vals='{"type": "pick", "clue": [{{h.0}},{{h.1}}]}'
+                class="clickable"
+            >{{ c.points }}</td>
+            {% endif %}
         {% endfor %}
     </tr>
     {% endfor %}
 </table>
-</div>
+{%- macro clue(handle, show_hint) -%}
+    {%- let clue = game.board.get(handle.clone()).unwrap() -%}
+    <div id="clue">
+        <span>{{ clue.clue }}</span>
+        {%- if show_hint %}
+        <hr>
+        <span>{{ clue.hint }}</span>
+        {% endif %}
+    </div>
+{%- endmacro %}
+{% match game.phase %}
+{% when GamePhase::Clue with { clue: c, exclusive: e } %}
+    {% call clue(c, false) %}
+{% when GamePhase::Buzzing with { clue: c } %}
+    {% call clue(c, false) %}
+{% when GamePhase::Buzzed with { clue: c, contestant: _ } %}
+    {% call clue(c, false) %}
+{% when GamePhase::Resolution with { clue: c, contestant: _, show_hint: h } %}
+    {% call clue(c, h) %}
+{% else %}
+{% endmatch %}

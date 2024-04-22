@@ -1,18 +1,21 @@
 @font-face {
-  font-family: 'Mallanna';
-  font-style: normal;
-  font-weight: 400;
-  src: url('/Mallanna-Regular.ttf') format('truetype');
+    font-family: 'Mallanna';
+    font-style: normal;
+    font-weight: 400;
+    src: url('/Mallanna-Regular.ttf') format('truetype');
 }
 
 body {
-  font-family: 'Mallanna';
-  font-weight: 400;
+    font-family: 'Mallanna';
+    font-weight: 400;
+    margin: 0;
+    color: var(--text);
+    background-color: var(--background);
 }
 
 h1, h2, h3, h4, h5 {
-  font-family: 'Mallanna';
-  font-weight: 700;
+    font-family: 'Mallanna';
+    font-weight: 700;
 }
 
 html {font-size: 100%;} /* 16px */
@@ -30,22 +33,22 @@ h5 {font-size: 1.250rem; /* 20px */}
 small {font-size: 0.800rem; /* 12.8px */}
 
 @media (prefers-color-scheme: light) {
-  :root {
-    --text: #040029;
-    --background: #b0a9e5;
-    --primary: #050061;
-    --secondary: #020024;
-    --accent: #6460d7;
-  }
+    :root {
+        --text: #040029;
+        --background: #b0a9e5;
+        --primary: #050061;
+        --secondary: #020024;
+        --accent: #6460d7;
+    }
 }
 @media (prefers-color-scheme: dark) {
-  :root {
-    --text: #dad6ff;
-    --background: #211a56;
-    --primary: #a49fff;
-    --secondary: #dddbff;
-    --accent: #2c289f;
-  }
+    :root {
+        --text: #dad6ff;
+        --background: #211a56;
+        --primary: #a49fff;
+        --secondary: #dddbff;
+        --accent: #2c289f;
+    }
 }
 
 @keyframes pulse-animation {
@@ -58,9 +61,18 @@ small {font-size: 0.800rem; /* 12.8px */}
     }
 }
 
-body {
-    color: var(--text);
-    background-color: var(--background);
+main {
+    display: grid;
+    grid:
+        "b b b a"
+        "c c c a" minmax(5rem, auto)
+        / 1fr 1fr 1fr 1fr;
+    gap: 1rem;
+
+    box-sizing: border-box;
+    padding: 0.5rem;
+    height: 100vh;
+    width: 100vw;
 }
 
 .htmx-indicator {
@@ -118,7 +130,64 @@ body {
 #errors.hide {
     display:none;
 }
+
+#board {
+    grid-area: b;
+    display: grid;
+    grid:
+        ".. .. .." 1rem
+        ".. clue .." minmax(3rem, auto)
+        ".. .. .." 1rem
+        / 1rem minmax(3rem, auto) 1rem;
+
+    table {
+        grid-column: 1 / -1;
+        grid-row: 1 / -1;
+        z-index: 1;
+        border-collapse: collapse;
+        border-spacing: 0;
+        width: 100%;
+        height: 100%;
+    }
+    th {
+        text-transform: uppercase;
+    }
+    th, td {
+        padding: 0.5rem;
+        vertical-align: center;
+        text-align: center;
+        border: 1px solid var(--primary);
+    }
+    td.clickable:hover {
+        background: var(--accent);
+    }
+
+    #clue {
+        grid-area: clue;
+        z-index: 2;
+        background: var(--background);
+        font-size: 3rem;
+        border: 1px solid var(--primary);
+        border-radius: 1rem;
+
+        padding: 2rem;
+
+        display: flex;
+        flex-direction: column;
+
+        span {
+            flex: 1rem 0 0;
+            text-align: center;
+        }
+
+        hr {
+            margin: 0;
+            border: 1px dashed var(--primary);
+        }
+    }
+}
 #contestants {
+    grid-area: c;
     ul {
         display: flex;
         flex-direction: row;
@@ -152,4 +221,8 @@ body {
     li span {
         flex: 2rem;
     }
+}
+
+#admin {
+    grid-area: a;
 }

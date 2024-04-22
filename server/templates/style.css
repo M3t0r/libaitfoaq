@@ -63,20 +63,34 @@ body {
     background-color: var(--background);
 }
 
-#connecting {
-    text-transform: uppercase;
-    font-size: 3.054rem;
-}
-
 .htmx-indicator {
     animation: pulse-animation 3s ease 0s infinite normal both running;
     display:none;
 }
-.htmx-request .htmx-indicator{
+.htmx-request .htmx-indicator {
     display:inline;
 }
-.htmx-request.htmx-indicator{
+.htmx-request.htmx-indicator {
     display:inline;
+}
+
+#connecting {
+    text-transform: uppercase;
+    text-align: center;
+
+    background: var(--background);
+    border: 1px solid var(--primary);
+    border-radius: 1rem;
+    padding: 2rem;
+
+    position: fixed;
+    inset: 25% 25% auto 25%;
+    z-index: 99;
+
+    animation: none;
+}
+#connecting h1 {
+    animation: pulse-animation 3s ease 0s infinite normal both running;
 }
 
 .clickable {

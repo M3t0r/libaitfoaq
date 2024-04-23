@@ -15,6 +15,7 @@ use tracing_subscriber::prelude::*;
 use state::StateChannelsAndToken;
 use std::{net::SocketAddr, path::PathBuf};
 use tokio_util::sync::CancellationToken;
+use tower_http::services::ServeDir;
 use machineid_rs::{IdBuilder, HWIDComponent, Encryption};
 
 mod communication;
@@ -53,6 +54,7 @@ async fn main() {
         .route("/Mallanna-Regular.ttf", get(mallanna))
         .route("/htmx.min.js", get(htmx))
         .route("/htmx.ws.js", get(htmx_ws))
+        .nest_service("/board-assets", ServeDir::new("board-assets"))
         .with_state(state.clonable_channels());
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();

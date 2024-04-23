@@ -25,7 +25,7 @@
 {%- macro clue(handle, still_reading) -%}
     {%- let clue = game.board.get(handle).unwrap() -%}
     <div id="clue" class="{% if clue.is_long() %}smaller{% endif %} {% if still_reading %}reading{% endif %}">
-        <span>{{ clue.clue|safe }}</span>
+        <div>{{ clue.clue|safe }}</div>
     </div>
 {%- endmacro %}
 {% match game.phase %}

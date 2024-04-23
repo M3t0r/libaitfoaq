@@ -54,6 +54,7 @@ async fn main() {
         .route("/Mallanna-Regular.ttf", get(mallanna))
         .route("/htmx.min.js", get(htmx))
         .route("/htmx.ws.js", get(htmx_ws))
+        .route("/confetti.min.js", get(confetti))
         .nest_service("/board-assets", ServeDir::new("board-assets"))
         .with_state(state.clonable_channels());
 
@@ -132,6 +133,14 @@ async fn htmx_ws() -> impl IntoResponse {
         StatusCode::OK,
         [(header::CONTENT_TYPE, "application/javascript")],
         include_str!("../templates/htmx.ws.js"),
+    )
+}
+
+async fn confetti() -> impl IntoResponse {
+    (
+        StatusCode::OK,
+        [(header::CONTENT_TYPE, "application/javascript")],
+        include_str!("../templates/confetti.min.js"),
     )
 }
 

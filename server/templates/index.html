@@ -4,6 +4,7 @@
     <title>Answers in the form of a question</title>
     <script src="/htmx.min.js"></script>
     <script src="/htmx.ws.js"></script>
+    <script src="/confetti.min.js"></script>
     <link rel="stylesheet" href="/style.css">
 </head>
 <body>
@@ -13,8 +14,12 @@
         <div id="contestants"></div>
         <div id="admin"></div>
         <div id="errors" class="hide"></div>
+        <canvas id="confetti-canvas"></canvas>
     </main>
     <script>
+        let shouldConfetti = false;
+        let isConfetti = false;
+
         htmx.on("htmx:wsOpen", (evt) => {
             evt.detail.elt.classList.remove("htmx-request");
             // htmx.findAll("link[rel='stylesheet']").forEach(l => {l.href = l.href.replace(/\?(.*)|$/, "\?$1a")});
@@ -24,6 +29,19 @@
         });
         htmx.on("htmx:wsBeforeMessage", () => {
             htmx.addClass(htmx.find("#errors"), "old");
+            shouldConfetti = false;
+        });
+        htmx.on("htmx:wsAfterMessage", () => {
+            if(shouldConfetti && !isConfetti) {
+                console.log("starting");
+                startConfetti();
+                isConfetti = true;
+            };
+            if(!shouldConfetti && isConfetti) {
+                console.log("stopping");
+                stopConfetti();
+                isConfetti = false;
+            };
         });
         // Add hotkey information
         htmx.onLoad((swapped) => {

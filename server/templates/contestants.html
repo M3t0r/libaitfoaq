@@ -3,10 +3,18 @@
     <li class="contestant {%- if c.indicate %} indicated{% endif -%}{%- if !c.connected %} disconnected{% endif -%}">
         <div class="flex-container">
             <span class="name" {%- if !c.connected %} title="disconnected"{% endif -%}>
-                  {{- c.name.as_deref().unwrap_or(c.name_hint)|e -}}
+                {{- c.name.as_deref().unwrap_or(c.name_hint)|e -}}
+                {% if Self::is_winner(self, loop.index0.clone()).unwrap() %}
+                🏆
+                {% endif %}
             </span>
             <span class="points">{{ c.points }}</span>
         </div>
     </li>
     {% endfor %}
 </ul>
+{% match game.phase %}
+{% when GamePhase::Score %}
+    <script>shouldConfetti = true;</script>
+{% else %}
+{% endmatch %}

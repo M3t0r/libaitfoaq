@@ -245,6 +245,22 @@ struct StateTemplate {
     connection: ConnectionState,
 }
 
+impl StateTemplate {
+    fn is_winner(&self, c: ContestantHandle) -> Result<bool, Error> {
+        if !matches!(self.game.phase, GamePhase::Score) { return Ok(false); }
+        let highscore = self.game.contestants
+            .iter()
+            .max_by_key(|c| c.points)
+            .ok_or(libaitfoaq::Error::ContestantNotFound)?
+            .points;
+        let score = self.game.contestants
+            .get(c)
+            .ok_or(libaitfoaq::Error::ContestantNotFound)?
+            .points;
+        Ok(score == highscore)
+    }
+}
+
 #[derive(Debug)]
 pub enum Serializer {
     HTML,

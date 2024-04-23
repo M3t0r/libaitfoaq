@@ -147,6 +147,9 @@ impl Game {
         self.phase = GamePhase::Picking {
             contestant: self.random_contestant(),
         };
+        for (i, contestant) in self.contestants.iter_mut().enumerate() {
+            contestant.indicate = false;
+        }
         Ok(())
     }
 

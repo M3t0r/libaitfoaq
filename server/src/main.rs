@@ -1,7 +1,7 @@
 use askama_axum::Template;
 use axum::{
     async_trait,
-    extract::{ws::WebSocketUpgrade, ConnectInfo, State, FromRequestParts},
+    extract::{ws::WebSocketUpgrade, ConnectInfo, State, FromRequestParts, FromRef},
     http::{
         header,
         StatusCode,
@@ -12,9 +12,10 @@ use axum::{
     Router,
 };
 use tracing_subscriber::prelude::*;
-use state::StateChannels;
+use state::StateChannelsAndToken;
 use std::{net::SocketAddr, path::PathBuf};
 use tokio_util::sync::CancellationToken;
+use machineid_rs::{IdBuilder, HWIDComponent, Encryption};
 
 mod communication;
 mod state;
@@ -32,8 +33,17 @@ async fn main() {
 
     let cancellation_token = CancellationToken::new();
 
+    let mut admin_token = IdBuilder::new(Encryption::SHA256)
+        .add_component(HWIDComponent::SystemID)
+        .add_component(HWIDComponent::CPUID)
+        .add_component(HWIDComponent::MachineName)
+        .add_component(HWIDComponent::FileToken("./token"))
+        .build("nonceorsomminidunno")
+        .expect("Can't generate a admin token");
+    admin_token.truncate(16);
+
     let journal = PathBuf::from("./journal.jsonl");
-    let mut state = crate::state::State::with_journal(&journal).expect("Could not load or create journal file");
+    let mut state = crate::state::State::with_journal_and_token(&journal, admin_token.clone()).expect("Could not load or create journal file");
 
     let app = Router::new()
         .route("/", get(index))
@@ -46,6 +56,10 @@ async fn main() {
         .with_state(state.clonable_channels());
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+
+    println!();
+    println!("Admin interface: http://{}/?{}", listener.local_addr().unwrap(), &admin_token);
+    println!();
 
     tokio::join!(
         async {
@@ -72,11 +86,11 @@ async fn main() {
 
 #[derive(Template)]
 #[template(path = "index.html")]
-struct Index;
+struct Index{token: Option<String>}
 
-#[tracing::instrument]
-async fn index() -> Index {
-    Index
+#[tracing::instrument(skip(admin))]
+async fn index(ExtractAdminToken(admin): ExtractAdminToken) -> Index {
+    Index{token: admin}
 }
 
 async fn favicon() -> impl IntoResponse {
@@ -119,13 +133,14 @@ async fn htmx_ws() -> impl IntoResponse {
     )
 }
 
-#[tracing::instrument(skip(ws, channels))]
+#[tracing::instrument(skip(ws, admin, channels_and_token))]
 async fn websocket(
     ConnectInfo(peer_address): ConnectInfo<SocketAddr>,
     ExtractUserAgent(user_agent): ExtractUserAgent,
+    ExtractAdminToken(admin): ExtractAdminToken,
     headers: header::HeaderMap,
     ws: WebSocketUpgrade,
-    State(channels): axum::extract::State<StateChannels>,
+    State(channels_and_token): axum::extract::State<StateChannelsAndToken>,
 ) -> impl IntoResponse {
     tracing::info!(%peer_address, "new websocket connection");
 
@@ -135,7 +150,7 @@ async fn websocket(
         _ => crate::communication::Serializer::HTML,
     };
     ws.on_upgrade(move |socket| {
-        crate::communication::player_handler(socket, peer_address, channels, serializer)
+        crate::communication::player_handler(socket, peer_address, channels_and_token, admin.is_some(), serializer)
     })
 }
 
@@ -148,11 +163,31 @@ where
 {
     type Rejection = (StatusCode, &'static str);
 
-    async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
+    async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self, Self::Rejection> {
         if let Some(user_agent) = parts.headers.get(header::USER_AGENT) {
             Ok(ExtractUserAgent(user_agent.clone()))
         } else {
             Err((StatusCode::BAD_REQUEST, "`User-Agent` header is missing"))
+        }
+    }
+}
+
+struct ExtractAdminToken(Option<String>);
+
+#[async_trait]
+impl<S> FromRequestParts<S> for ExtractAdminToken
+where
+    StateChannelsAndToken: FromRef<S>,
+    S: Send + Sync,
+{
+    type Rejection = (StatusCode, &'static str);
+
+    async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
+        let admin_token = StateChannelsAndToken::from_ref(state).admin_token;
+        if Some(admin_token.as_str()) == parts.uri.query() {
+            Ok(Self(Some(admin_token)))
+        } else {
+            Ok(Self(None))
         }
     }
 }

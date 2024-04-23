@@ -12,6 +12,7 @@ pub struct In (Event, oneshot::Sender<Result<GameState, GameError>>);
 
 #[derive(Debug)]
 pub struct State<'a> {
+    admin_token: String,
     game: Game,
     journal_path: &'a Path,
     journal_writer: std::fs::File,
@@ -22,13 +23,14 @@ pub struct State<'a> {
 }
 
 #[derive(Clone, Debug)]
-pub struct StateChannels {
+pub struct StateChannelsAndToken {
+    pub admin_token: String,
     pub rx: watch::Receiver<Out>,
     pub tx: mpsc::Sender<In>,
 }
 
 impl<'a> State<'a> {
-    pub fn with_journal(journal_path: &'a Path) -> Result<Self, Error> {
+    pub fn with_journal_and_token(journal_path: &'a Path, token: String) -> Result<Self, Error> {
         let mut game = libaitfoaq::Game::new();
 
         if journal_path.exists() {
@@ -52,6 +54,7 @@ impl<'a> State<'a> {
         let (out_tx, out_rx) = watch::channel(game.get_game_state());
         let (in_tx, in_rx) = mpsc::channel(8);
         let state = State {
+            admin_token: token,
             game,
             journal_path,
             journal_writer,
@@ -90,8 +93,9 @@ impl<'a> State<'a> {
         }
     }
 
-    pub fn clonable_channels(&self) -> StateChannels {
-        StateChannels {
+    pub fn clonable_channels(&self) -> StateChannelsAndToken {
+        StateChannelsAndToken {
+            admin_token: self.admin_token.clone(),
             rx: self.out_rx.clone(),
             tx: self.in_tx.clone(),
         }

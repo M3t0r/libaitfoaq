@@ -1005,6 +1005,7 @@ dependencies = [
  "axum 0.7.5",
  "console-subscriber",
  "libaitfoaq",
+ "machineid-rs",
  "serde",
  "serde_json",
  "thiserror",

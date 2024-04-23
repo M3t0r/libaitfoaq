@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-    <main hx-ext="ws" ws-connect="/websocket" class="htmx-request">
+    <main hx-ext="ws" ws-connect="/websocket?{{ token.as_deref().unwrap_or("") }}" class="htmx-request">
         <div class="htmx-indicator" id="connecting"><h1>connecting</h1></div>
         <div id="board"></div>
         <div id="contestants"></div>

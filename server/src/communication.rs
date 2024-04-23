@@ -1,6 +1,6 @@
 use std::{collections::HashMap, net::SocketAddr, num::ParseIntError, time::Duration};
 
-use crate::state::{State, StateChannels};
+use crate::state::{State, StateChannelsAndToken};
 use axum::extract::ws::{Message, WebSocket};
 use askama::Template;
 use libaitfoaq::{events::Event, state::{ClueHandle, ContestantHandle, GameState, GamePhase}};
@@ -16,7 +16,8 @@ const PING_MISSES: usize = 3;
 pub async fn player_handler(
     socket: WebSocket,
     peer_address: SocketAddr,
-    StateChannels{rx, tx}: StateChannels,
+    StateChannelsAndToken{rx, tx, ..}: StateChannelsAndToken,
+    is_admin: bool,
     serializer: Serializer,
 ) {
     let name = format!("{}", &peer_address);
@@ -27,7 +28,7 @@ pub async fn player_handler(
         rx,
         serializer,
         state: ConnectionState {
-            is_admin: true,
+            is_admin,
             name: name.to_owned(),
             controlling: None,
         },

@@ -22,9 +22,9 @@
     </tr>
     {% endfor %}
 </table>
-{%- macro clue(handle, still_reading) -%}
+{%- macro clue(handle, buzzing) -%}
     {%- let clue = game.board.get(handle).unwrap() -%}
-    <div id="clue" class="{% if clue.is_long() %}smaller{% endif %} {% if still_reading %}reading{% endif %}">
+    <div id="clue" class="{% if clue.is_long() %}smaller{% endif %} {% if buzzing %}buzzing{% endif %}">
         <div>{{ clue.clue|safe }}</div>
     </div>
 {%- endmacro %}
@@ -32,9 +32,9 @@
 {% when GamePhase::Preparing %}
     {% if game.board.categories.len() == 0 %}<h1>Loading...</h1>{% endif %}
 {% when GamePhase::Clue with { clue: c, exclusive: e } %}
-    {% call clue(c, true) %}
-{% when GamePhase::Buzzing with { clue: c } %}
     {% call clue(c, false) %}
+{% when GamePhase::Buzzing with { clue: c } %}
+    {% call clue(c, true) %}
 {% when GamePhase::Buzzed with { clue: c, contestant: _ } %}
     {% call clue(c, false) %}
 {% when GamePhase::Resolution with { clue: clue, contestant: _, show_hint: show_hint } %}

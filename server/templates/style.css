@@ -173,6 +173,7 @@ main {
         z-index: 2;
         background: var(--background);
         font-size: 3rem;
+        margin: 0.5rem;
         border: 1px solid var(--primary);
         border-radius: 1rem;
 
@@ -181,15 +182,15 @@ main {
         display: flex;
         flex-direction: column;
 
-        &.reading {
-            border-style: dashed;
+        &.buzzing {
+            border-width: 0.5rem;
+            margin: 1px;
         }
 
         &.smaller {
             font-size: 2rem;
         }
 
-        overflow: scroll;
         div {
             flex: 1rem 0 0;
             text-align: center;

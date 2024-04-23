@@ -36,7 +36,7 @@
             >Clue fully shown / read out loud</button>
             /
             <button
-                accesskey="a"
+                {# accesskey="a" #}
                 ws-send
                 hx-vals='{"type": "finish_clue"}'
             >Finish</button>
@@ -46,7 +46,7 @@
             {{ game.board.get(clue).unwrap().hint }}
         {% when GamePhase::Buzzing with { clue: clue }%}
             <button
-                accesskey="a"
+                {# accesskey="a" #}
                 ws-send
                 hx-vals='{"type": "finish_clue"}'
             >Finish without answer</button>
@@ -68,7 +68,7 @@
             >Reject</button>
             /
             <button
-                accesskey="a"
+                {# accesskey="a" #}
                 ws-send
                 hx-vals='{"type": "finish_clue"}'
             >Finish</button>

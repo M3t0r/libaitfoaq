@@ -305,7 +305,7 @@ impl Connection {
             },
             Ok(msg) => msg,
         };
-        println!("{}: received {:?}", self.id, &msg);
+        // println!("{}: received {:?}", self.id, &msg);
 
         match msg.connection.controlling {
             None => {},

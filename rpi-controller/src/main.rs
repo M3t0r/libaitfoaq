@@ -164,6 +164,7 @@ impl HandsetCommunicator {
                 },
                 Ok(_) = presence_rx.changed() => {
                     let presence = *presence_rx.borrow();
+                    println!("{}: presence: {presence}", self.id);
                     if !presence { self.connection.disconnect() }
                 },
                 msg = self.connection.receive(auto_reconnect) => {

@@ -64,9 +64,9 @@ small {font-size: 0.800rem; /* 12.8px */}
 main {
     display: grid;
     grid:
-        "b b b a"
-        "c c c a" minmax(5rem, max-content)
-        / 1fr 1fr 1fr 1fr;
+        "b a"
+        "c a" minmax(5rem, max-content)
+        / 3fr 1fr;
     gap: 1rem;
 
     box-sizing: border-box;
@@ -132,7 +132,10 @@ main {
 }
 
 #board {
-    grid-area: b;
+    grid-area: b/b/auto/a; /* extend into admin cell */
+    &.is_admin {
+        grid-area: b; /* board cell only */
+    }
     display: grid;
     grid:
         ".. .. .." 1rem
@@ -188,7 +191,10 @@ main {
     }
 }
 #contestants {
-    grid-area: c;
+    grid-area: c/c/auto/a; /* extend into admin cell */
+    &.is_admin {
+        grid-area: c; /* contestant cell only */
+    }
     ul {
         display: flex;
         flex-direction: row;

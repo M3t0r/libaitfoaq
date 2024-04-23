@@ -1,4 +1,14 @@
-<div id="board">{% include "board.html" %}</div>
-<div id="contestants">{% include "contestants.html" %}</div>
-<div id="admin">{% include "admin.html" %}</div>
+<div
+    id="board"
+    class="{% if connection.is_admin %}is_admin{% endif %}"
+>
+    {% include "board.html" %}
+</div>
+<div
+    id="contestants"
+    class="{% if connection.is_admin %}is_admin{% endif %}"
+>
+    {% include "contestants.html" %}
+</div>
+{% if connection.is_admin %}<div id="admin">{% include "admin.html" %}</div>{% endif %}
 

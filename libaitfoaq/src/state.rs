@@ -83,6 +83,21 @@ pub struct Clue {
     pub solved: bool,
 }
 
+impl Clue {
+    pub fn is_long(&self) -> bool {
+        let lines: Vec<_> = self.clue.lines().collect();
+        // 3+ lines
+        if lines.len() > 2 {
+            return true;
+        }
+        // any line longer than 50 letters
+        if lines.iter().filter(|l| !l.contains("<img")).any(|l| l.chars().count() > 50) {
+            return true;
+        }
+        false
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Contestant {
     /// Can be renamed by the moderator and is the only name that should be

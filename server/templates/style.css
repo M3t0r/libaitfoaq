@@ -179,9 +179,18 @@ main {
         display: flex;
         flex-direction: column;
 
+        &.reading {
+            border-style: dashed;
+        }
+
+        &.smaller {
+            font-size: 2rem;
+        }
+
         span {
             flex: 1rem 0 0;
             text-align: center;
+            white-space: pre-line;
         }
 
         hr {

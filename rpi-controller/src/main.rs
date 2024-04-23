@@ -1,6 +1,6 @@
+use std::io::Stdin;
 use std::time::Duration;
 
-use rppal::gpio::{Gpio, InputPin, OutputPin, Error as GPIOError};
 use tokio::sync::watch;
 use tokio::time::{sleep, Interval, MissedTickBehavior, interval};
 use tokio_tungstenite::tungstenite::handshake::client::{generate_key, Request};
@@ -10,6 +10,7 @@ use tokio_util::sync::CancellationToken;
 use futures_util::{SinkExt, StreamExt};
 use machineid_rs::{IdBuilder, Encryption, HWIDComponent};
 use serde::Deserialize;
+use tokio::io::{self, AsyncReadExt};
 
 const UPDATE_HERTZ: u64 = 20;
 const RECONNECT_HERTZ: u64 = 2;
@@ -17,28 +18,7 @@ const PING_HERTZ: u64 = 1; // this also defines the max latency
 
 type Websocket = tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>;
 
-struct PinTiples {
-    switch: u8,
-    presence: u8,
-    led: u8,
-}
-
-impl PinTiples {
-    fn new(switch: u8, presence: u8, led: u8) -> Self {
-        Self {
-            switch,
-            presence,
-            led,
-        }
-    }
-}
-
 struct Handset {
-    switch: InputPin,
-    presence: InputPin,
-    led: OutputPin,
-    switch_flank: bool,
-
     /// only sends clicks, not when the switch is released
     switch_tx: watch::Sender<()>,
     /// sends true when a handset is connected, and false on disconnect
@@ -48,41 +28,38 @@ struct Handset {
     led_rx: watch::Receiver<bool>,
 }
 
-impl TryFrom<&PinTiples> for Handset {
-    type Error = GPIOError;
-    fn try_from(pins: &PinTiples) -> Result<Self, Self::Error> {
-        let gpio = Gpio::new()?;
+impl Handset {
+    fn new() -> Self {
         let (led_tx, led_rx) = watch::channel(false);
-        Ok(Self {
-            switch: gpio.get(pins.switch)?.into_input_pullup(),
-            presence: gpio.get(pins.presence)?.into_input_pullup(),
-            led: gpio.get(pins.led)?.into_output_high(),
-            switch_flank: true,
-
+        Self {
             switch_tx: watch::Sender::new(()),
-            presence_tx: watch::Sender::new(false),
+            presence_tx: watch::Sender::new(true),
             led_tx,
             led_rx,
-        })
+        }
     }
-}
-
-impl Handset {
-    fn update(&mut self) {
-        let switch = self.switch.is_low();
-        if self.switch_flank ^ switch {
-            self.switch_flank = switch;
-            if switch {
-                self.switch_tx.send_replace(());
-            }
-        }
-
-        let presence = self.presence.is_low();
-        if *self.presence_tx.borrow() != presence {
-            self.presence_tx.send_replace(presence);
-        }
-
-        self.led.write((*self.led_rx.borrow() as u8).into());
+    async fn update(&mut self) {
+        tokio::join!(
+            async {
+                let mut old_led = false;
+                loop {
+                    self.led_rx.changed().await.expect("kabum");
+                    let led = *self.led_rx.borrow();
+                    if led != old_led {
+                        println!("Active: {led}");
+                        old_led = led;
+                    }
+                }
+            },
+            async {
+                let mut stdin = io::stdin();
+                let mut buf = [0u8; 128];
+                loop {
+                    stdin.read(&mut buf).await.expect("kablooey");
+                    self.switch_tx.send_replace(());
+                }
+            },
+        );
     }
 }
 
@@ -123,7 +100,7 @@ impl HandsetCommunicator {
         reconnect_interval.set_missed_tick_behavior(MissedTickBehavior::Delay);
         let mut ping_interval = interval(Duration::from_millis(1000/PING_HERTZ));
         ping_interval.set_missed_tick_behavior(MissedTickBehavior::Skip);
-        let id = format!("{}-{}", machine_id, handset.switch.pin());
+        let id = format!("{}", machine_id);
 
         Self {
             id: id.to_owned(),
@@ -384,17 +361,9 @@ async fn main() -> std::result::Result<(), std::boxed::Box<dyn std::error::Error
         .expect("Could not parse ws-address");
     println!("connecting to {:?}", uri);
 
-    let mut handsets: Vec<Handset> = [
-        PinTiples::new(21, 20, 26),
-        PinTiples::new(13, 19, 16),
-        PinTiples::new(5, 6, 12),
-        PinTiples::new(0, 1, 7),
-    ]
-        .iter()
-        .map(|p| p.try_into())
-        .collect::<Result<Vec<_>,_>>()?;
+    let mut handset = Handset::new();
 
-    let communicators: Vec<_> = handsets.iter()
+    let communicators: Vec<_> = [&handset].iter()
         .map(|h| HandsetCommunicator::from_handset_with_request(machine_id.to_owned(), h, uri.to_owned()))
         .collect();
 
@@ -411,14 +380,7 @@ async fn main() -> std::result::Result<(), std::boxed::Box<dyn std::error::Error
             while (tasks.join_next().await).is_some() { }
         },
         async {
-            // handle hardware pins
-            let mut interval = interval(Duration::from_millis(1000/UPDATE_HERTZ));
-            while !cancellation_token.is_cancelled() {
-                for handset in &mut handsets {
-                    handset.update();
-                }
-                interval.tick().await;
-            }
+            handset.update().await;
         },
         async {
             // handle termination

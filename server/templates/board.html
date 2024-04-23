@@ -11,11 +11,13 @@
         {% for (h,c) in r %}
             {% if c.solved %}<td>&nbsp;</td>{% else %}
             <td
+                {%- if connection.is_admin %}
                 ws-send
                 hx-trigger="click"
                 hx-vals='{"type": "pick", "clue": [{{h.0}},{{h.1}}]}'
                 class="clickable"
-                {%- if connection.is_admin %}title="{{c.clue}}"{% endif %}
+                title="{{c.clue}}"
+                {% endif -%}
             >{{ c.points }}</td>
             {% endif %}
         {% endfor %}

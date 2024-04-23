@@ -33,6 +33,8 @@
     </div>
 {%- endmacro %}
 {% match game.phase %}
+{% when GamePhase::Preparing %}
+    {% if game.board.categories.len() == 0 %}<h1>Loading...</h1>{% endif %}
 {% when GamePhase::Clue with { clue: c, exclusive: e } %}
     {% call clue(c, false) %}
 {% when GamePhase::Buzzing with { clue: c } %}

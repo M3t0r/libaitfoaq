@@ -3,10 +3,11 @@
     <label>
         Phase:
         <input readonly id="phase" value="{{ "{:?}"|format(game.phase) }}">
-    </label>
+    </label><br>
     {% match game.phase %}
         {% when GamePhase::Preparing %}
             <button
+                accesskey="q"
                 ws-send
                 hx-vals='{"type": "open_lobby"}'
             >Open Lobby</button>
@@ -22,17 +23,20 @@
         {% when GamePhase::Connecting %}
             {% if game.contestants.len() > 0 %}
             <button
+                accesskey="q"
                 ws-send
                 hx-vals='{"type": "start_game"}'
             >Start Game!</button>
             {% endif %}
         {% when GamePhase::Clue with { clue: clue, exclusive: _ }%}
             <button
+                accesskey="q"
                 ws-send
                 hx-vals='{"type": "clue_fully_shown"}'
             >Clue fully shown / read out loud</button>
             /
             <button
+                accesskey="a"
                 ws-send
                 hx-vals='{"type": "finish_clue"}'
             >Finish</button>
@@ -42,6 +46,7 @@
             {{ game.board.get(clue).unwrap().hint }}
         {% when GamePhase::Buzzing with { clue: clue }%}
             <button
+                accesskey="a"
                 ws-send
                 hx-vals='{"type": "finish_clue"}'
             >Finish without answer</button>
@@ -51,16 +56,19 @@
             {{ game.board.get(clue).unwrap().hint }}
         {% when GamePhase::Buzzed with { clue: clue, contestant: _ }%}
             <button
+                accesskey="q"
                 ws-send
                 hx-vals='{"type": "accept_answer"}'
             >Accept</button>
             /
             <button
+                accesskey="w"
                 ws-send
                 hx-vals='{"type": "reject_answer"}'
             >Reject</button>
             /
             <button
+                accesskey="a"
                 ws-send
                 hx-vals='{"type": "finish_clue"}'
             >Finish</button>
@@ -70,12 +78,14 @@
             {{ game.board.get(clue).unwrap().hint }}
         {% when GamePhase::Resolution with { clue: clue, contestant: _, show_hint }%}
             <button
+                accesskey="q"
                 ws-send
                 hx-vals='{"type": "finish_clue"}'
             >Finish</button>
             {% if !show_hint -%}
             /
             <button
+                accesskey="w"
                 ws-send
                 hx-vals='{"type": "reveal_hint"}'
             >Reveal Hint</button>

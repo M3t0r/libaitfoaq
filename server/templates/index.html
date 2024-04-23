@@ -25,6 +25,19 @@
         htmx.on("htmx:wsBeforeMessage", () => {
             htmx.addClass(htmx.find("#errors"), "old");
         });
+        // Add hotkey information
+        htmx.onLoad((swapped) => {
+            for(let element of htmx.findAll(swapped, '[accesskey]')) {
+                let label = `[${element.accessKey}]`;
+                if(!element.innerHTML.startsWith(label)) {
+                    element.innerHTML = label + " " + element.innerHTML;
+                }
+                let title = `[${element.accessKeyLabel}]`;
+                if(!element.title.endsWith(title)) {
+                    element.title += " " + title;
+                }
+            }
+        });
         
         htmx.config.wsReconnectDelay = function (retryCount) {
             return 150 + (Math.min(retryCount, 4) * 100) + (200 * Math.random());

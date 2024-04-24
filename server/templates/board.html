@@ -42,10 +42,10 @@
 {% when GamePhase::Resolution with { clue: clue, contestant: _, show_hint: show_hint } %}
     {%- let clue = game.board.get(clue).unwrap() -%}
     <div id="clue">
-        <span>{{ clue.response }}</span>
+        <div>{{ clue.response|safe }}</div>
         {%- if show_hint %}
         <hr>
-        <span>{{ clue.hint }}</span>
+        <div>{{ clue.hint|safe }}</div>
         {% endif %}
     </div>
 {% else %}

@@ -266,11 +266,19 @@ impl Game {
         match self.phase {
             GamePhase::Clue { clue, exclusive } => {
                 self.board.mark_solved(&clue)?;
-                self.phase = self.next_or_end(exclusive);
+                self.phase = GamePhase::Resolution {
+                    clue,
+                    contestant: exclusive.unwrap_or_else(|| self.random_contestant()),
+                    show_hint: false
+                };
             }
             GamePhase::Buzzing { clue } => {
                 self.board.mark_solved(&clue)?;
-                self.phase = self.next_or_end(None);
+                self.phase = GamePhase::Resolution {
+                    clue,
+                    contestant: self.random_contestant(),
+                    show_hint: false
+                };
             }
             GamePhase::Buzzed { clue, contestant } => {
                 self.board.mark_solved(&clue)?;

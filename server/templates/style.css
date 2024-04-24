@@ -49,7 +49,7 @@ html { font-size: 100%; }
 }
 
 body {
-    font-family: 'Mallanna';
+    font-family: 'Gorton Perfected', 'Mallanna';
     font-weight: 400;
     margin: 0;
     color: var(--text);
@@ -196,7 +196,7 @@ main {
             text-align: center;
             white-space: pre-line;
 
-            img:only-child {
+            img {
                 object-fit: contain;
                 object-position: 50% 50%;
                 max-width: 100%;

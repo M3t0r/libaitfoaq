@@ -1,0 +1,254 @@
+{
+  "categories": [
+    {
+      "title": "Config Language Acronyms",
+      "clues": [
+        {
+          "clue": "XML",
+          "response": "What is the eXtensible Markup Language?",
+          "hint": "1996",
+          "points": 100,
+          "exclusive": false,
+          "can_wager": false,
+          "solved": false
+        },
+        {
+          "clue": "JSON",
+          "response": "What is JavaScript Object Notation?",
+          "hint": "2001, Douglas Crockford, ISO 21778:2017",
+          "points": 200,
+          "exclusive": false,
+          "can_wager": false,
+          "solved": false
+        },
+        {
+          "clue": "YAML",
+          "response": "What is Yet Another Markup Language / YAML ain't Markup Language?",
+          "hint": "2001, Clark Evans",
+          "points": 300,
+          "exclusive": false,
+          "can_wager": false,
+          "solved": false
+        },
+        {
+          "clue": "HCL",
+          "response": "What is the Hashicorp Configuration Language?",
+          "hint": "2014, Mitchell Hashimoto",
+          "points": 400,
+          "exclusive": false,
+          "can_wager": false,
+          "solved": false
+        },
+        {
+          "clue": "TOML",
+          "response": "What is Tom's Obvious, Minimal Language?",
+          "hint": "2013, Tom Preston-Werner",
+          "points": 500,
+          "exclusive": false,
+          "can_wager": false,
+          "solved": false
+        }
+      ]
+    },
+    {
+      "title": "Languages as 🙈🙉🙈",
+      "clues": [
+        {
+          "clue": "🐫+📝",
+          "response": "What is Perl?",
+          "hint": "1987, Larry Wall",
+          "points": 100,
+          "exclusive": false,
+          "can_wager": false,
+          "solved": false
+        },
+        {
+          "clue": "🐍+📝",
+          "response": "What is Python?",
+          "hint": "1991, Guido van Rossum",
+          "points": 200,
+          "exclusive": false,
+          "can_wager": false,
+          "solved": false
+        },
+        {
+          "clue": "🟥+💎",
+          "response": "What is Ruby?",
+          "hint": "1995, Yukihiro \"Matz\" Matsumoto",
+          "points": 300,
+          "exclusive": false,
+          "can_wager": false,
+          "solved": false
+        },
+        {
+          "clue": "🦀+🍄",
+          "response": "What is Rust?",
+          "hint": "2015, Graydon Hoare",
+          "points": 400,
+          "exclusive": false,
+          "can_wager": false,
+          "solved": false
+        },
+        {
+          "clue": "☕+📝=💩",
+          "response": "What is JavaScript?",
+          "hint": "1995 (only 7 months after Java, May - December), Brendan Eich",
+          "points": 500,
+          "exclusive": false,
+          "can_wager": false,
+          "solved": false
+        }
+      ]
+    },
+    {
+      "title": "Hackers in Movies",
+      "clues": [
+        {
+          "clue": "<img src='board-assets/hackers-1.jpg'>",
+          "response": "What is 'Mission: Impossible'?",
+          "hint": "1996, Ethan Hunt, Tom Cruise",
+          "points": 100,
+          "exclusive": false,
+          "can_wager": false,
+          "solved": false
+        },
+        {
+          "clue": "<img src='board-assets/hackers-2.png'>",
+          "response": "What is 'Tron: Legacy'?",
+          "hint": "2010, Sam Flynn, Garret Hedlund. Son of Kevin Flynn.",
+          "points": 200,
+          "exclusive": false,
+          "can_wager": false,
+          "solved": false
+        },
+        {
+          "clue": "<img src='board-assets/hackers-3.jpg'>",
+          "response": "What is 'WarGames'?",
+          "hint": "1983, David Lightman, Matthew Broderick. Joshua is the deceased son of Stephen Falken, the game designer.",
+          "points": 300,
+          "exclusive": false,
+          "can_wager": false,
+          "solved": false
+        },
+        {
+          "clue": "<img src='board-assets/hackers-4.png'>",
+          "response": "What is 'Jurassic Park'?",
+          "hint": "1993, Ray Arnold, Samuel L. Jackson. Say Please!",
+          "points": 400,
+          "exclusive": false,
+          "can_wager": false,
+          "solved": false
+        },
+        {
+          "clue": "<img src='board-assets/hackers-5.avif'>",
+          "response": "What is 'Who Am I'?",
+          "hint": "2014, Benjamin Engel, Tom Schilling. Part of CLAY: Clowns Laughing At You",
+          "points": 500,
+          "exclusive": false,
+          "can_wager": false,
+          "solved": false
+        }
+      ]
+    },
+    {
+      "title": "PHP",
+      "clues": [
+        {
+          "clue": "This acronym stands for \"Personal Homepage\"",
+          "response": "What is PHP?",
+          "hint": "Now \"PHP: Hypertext Preprocessor\"",
+          "points": 100,
+          "exclusive": false,
+          "can_wager": false,
+          "solved": false
+        },
+        {
+          "clue": "A popular PHP tool named after a creator of music",
+          "response": "What is Composer?",
+          "hint": "The de-facto standard package manager. Nils Adermann, Jordi Boggiano, who also maintain packagist.org.",
+          "points": 200,
+          "exclusive": false,
+          "can_wager": false,
+          "solved": false
+        },
+        {
+          "clue": "The former name of this Meetup",
+          "response": "What is the PHP User-Group Düsseldorf?",
+          "hint": "",
+          "points": 300,
+          "exclusive": false,
+          "can_wager": false,
+          "solved": false
+        },
+        {
+          "clue": "The company founded to monetize the most famous WordPress anti-spam plugin",
+          "response": "What is Automattic?",
+          "hint": "Plugin: Akismet, Plugin and company from the same people behind WordPress. Gravatar, Simplenote, Longreads, Tumblr, Pocket Casts, Beeper",
+          "points": 400,
+          "exclusive": false,
+          "can_wager": false,
+          "solved": false
+        },
+        {
+          "clue": "A just-in-time PHP implementation named after a music genre",
+          "response": "What is HHVM?",
+          "hint": "HipHop Virtual Machine, Meta, 2011",
+          "points": 500,
+          "exclusive": false,
+          "can_wager": false,
+          "solved": false
+        }
+      ]
+    },
+    {
+      "title": "Bash Constructs",
+      "clues": [
+        {
+          "clue": "<pre style='font-size: 1.5rem;'>date --iso-8601=date > today</pre>",
+          "response": "What is a redirect?",
+          "hint": ">> for append",
+          "points": 100,
+          "exclusive": false,
+          "can_wager": false,
+          "solved": false
+        },
+        {
+          "clue": "<pre style='font-size: 2.5rem; text-align:initial;'>echo ${WEB/Eng/Dus}</pre>",
+          "response": "What is WEBDusDus / Shell Parameter Expansion with search+replace?",
+          "hint": "offsets with ':', https://www.gnu.org/software/bash/manual/bash.html#Shell-Parameter-Expansion",
+          "points": 200,
+          "exclusive": false,
+          "can_wager": false,
+          "solved": false
+        },
+        {
+          "clue": "<pre style='font-size: 1rem; text-align:initial;'>sfdisk /dev/sdb << EOF\nlabel: gpt\nsize=512M, type=w95-fat32, bootable\ntype=linux\nEOF</pre>",
+          "response": "What is a Here Document?",
+          "hint": "a type of redirection, https://www.gnu.org/software/bash/manual/bash.html#Here-Documents?",
+          "points": 300,
+          "exclusive": false,
+          "can_wager": false,
+          "solved": false
+        },
+        {
+          "clue": "<pre style='font-size: 1.4rem;'>echo -n 'An error occured: ' 1>&2</pre>",
+          "response": "How do I move file descriptors?",
+          "hint": "https://www.gnu.org/software/bash/manual/bash.html#Duplicating-File-Descriptors",
+          "points": 400,
+          "exclusive": false,
+          "can_wager": false,
+          "solved": false
+        },
+        {
+          "clue": "<pre style='text-align:initial'>diff -y \\\n  <(ls a/) \\\n  <(ls b/)</pre>",
+          "response": "What is Process Substitution?",
+          "hint": "-y: side by side, $(command substitution), https://www.gnu.org/software/bash/manual/bash.html#Process-Substitution",
+          "points": 500,
+          "exclusive": false,
+          "can_wager": false,
+          "solved": false
+        }
+      ]
+    }
+  ]
+}

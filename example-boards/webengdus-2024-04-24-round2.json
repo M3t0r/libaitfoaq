@@ -1,0 +1,254 @@
+{
+  "categories": [
+    {
+      "title": "Tech Mascots",
+      "clues": [
+        {
+          "clue": "<img src='board-assets/mascots-1.svg'>",
+          "response": "Who is Tux?",
+          "hint": "Linux, 1996, Larry Ewing",
+          "points": 100,
+          "exclusive": false,
+          "can_wager": false,
+          "solved": false
+        },
+        {
+          "clue": "<img src='board-assets/mascots-2.jpg'>",
+          "response": "Who is the ElePHPant?",
+          "hint": "PHP, 1998, Vincent Pontier. https://www.php.net/elephpant.php",
+          "points": 200,
+          "exclusive": false,
+          "can_wager": false,
+          "solved": false
+        },
+        {
+          "clue": "<img src='board-assets/mascots-3-edit.png'>",
+          "response": "Who is Duke?",
+          "hint": "Java. Joe Palrang, created for a tech demo. https://dev.java/duke/",
+          "points": 300,
+          "exclusive": false,
+          "can_wager": false,
+          "solved": false
+        },
+        {
+          "clue": "<img src='board-assets/mascots-4.jpg'>",
+          "response": "Who is Beastie?",
+          "hint": "BSD, 1976. Also BSD Daemon. Initial design by comic artist Phil Foglio as payment for Mike O'Brien. More famous versions drawn by John Lasseter (Pixar, Disney, Toy Story, A Bug's Life, Cars) at Lucasfilm.",
+          "points": 400,
+          "exclusive": false,
+          "can_wager": false,
+          "solved": false
+        },
+        {
+          "clue": "<img src='board-assets/mascots-5.jpg'>",
+          "response": "Who is Puffy?",
+          "hint": "A drawing of Beastie without a body and trident (because of a deadline) morphed into a pufferfish.",
+          "points": 500,
+          "exclusive": false,
+          "can_wager": false,
+          "solved": false
+        }
+      ]
+    },
+    {
+      "title": "Musk Fails",
+      "clues": [
+        {
+          "clue": "A idea to build tunnels on stelts",
+          "response": "What is Hyperloop?",
+          "hint": "2013",
+          "points": 100,
+          "exclusive": false,
+          "can_wager": false,
+          "solved": false
+        },
+        {
+          "clue": "A company to build tunnels underground",
+          "response": "What is The Boring Company?",
+          "hint": "2017. \"a private road for your Tesla\" turned into \"metro with private carriages\". LVCC Loop",
+          "points": 200,
+          "exclusive": false,
+          "can_wager": false,
+          "solved": false
+        },
+        {
+          "clue": "A venture to modernize the Desperate Houswive's houses",
+          "response": "What is Solar Roof?",
+          "hint": "2016. 3000 total installtions.",
+          "points": 300,
+          "exclusive": false,
+          "can_wager": false,
+          "solved": false
+        },
+        {
+          "clue": "The most effective way to burn money, yet",
+          "response": "What is X?",
+          "hint": "let that sink in, 44b$ - 72% = 12.3b$",
+          "points": 400,
+          "exclusive": false,
+          "can_wager": false,
+          "solved": false
+        },
+        {
+          "clue": "15 Eurocent",
+          "response": "What is Dogecoin?",
+          "hint": "Excuse me, I only sell Doge! https://duckduckgo.com/?q=dogecoin&ia=cryptocurrency https://marketrealist.com/p/elon-musk-dogecoin-tweets/",
+          "points": 500,
+          "exclusive": false,
+          "can_wager": false,
+          "solved": false
+        }
+      ]
+    },
+    {
+      "title": "Cloud Providers",
+      "clues": [
+        {
+          "clue": "Sold books in a previous job",
+          "response": "What is Amazon Web Services?",
+          "hint": "2006-03 compute, 2002-07 data & APIs",
+          "points": 100,
+          "exclusive": false,
+          "can_wager": false,
+          "solved": false
+        },
+        {
+          "clue": "Arguably the best Maps provider",
+          "response": "What is Google Cloud Platform?",
+          "hint": "2008-04, Part of Google Cloud (GCP + GSuite + more",
+          "points": 200,
+          "exclusive": false,
+          "can_wager": false,
+          "solved": false
+        },
+        {
+          "clue": "Provided the base for GitHub Actions",
+          "response": "What is Microsoft Azure?",
+          "hint": "2008-10, Azure Pipelines",
+          "points": 300,
+          "exclusive": false,
+          "can_wager": false,
+          "solved": false
+        },
+        {
+          "clue": "Famous for free 4-node Kubernetes clusters",
+          "response": "What is Oracle Cloud?",
+          "hint": "2016-10, Kubernetes Control plane: free, 4 free compute nodes: https://docs.oracle.com/en-us/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm",
+          "points": 400,
+          "exclusive": false,
+          "can_wager": false,
+          "solved": false
+        },
+        {
+          "clue": "#E20074",
+          "response": "What is Open Telekom Cloud?",
+          "hint": "2016-03, https://www.telekom.com/en/media/media-information/archive/the-open-telekom-cloud-goes-live--363178, MagentaCLOUD: no compute, just storage",
+          "points": 500,
+          "exclusive": false,
+          "can_wager": false,
+          "solved": false
+        }
+      ]
+    },
+    {
+      "title": "Hacker Folklore",
+      "clues": [
+        {
+          "clue": "Infrastructure used to prohibit the spread of flames",
+          "response": "What is a Firewall?",
+          "hint": "<img src='board-assets/folklore-1.jpg'>",
+          "points": 100,
+          "exclusive": false,
+          "can_wager": false,
+          "solved": false
+        },
+        {
+          "clue": "Latin for \"runner\". Indicates the position on a slide rule.",
+          "response": "What is a Cursor?",
+          "hint": "<img src='board-assets/folklore-2.jpg'><span style='display:none'>The line indicating a position in text. The tri-angular thing is called a \"pointer\" because it points at things and is controlled by a \"pointing device\".</span>",
+          "points": 200,
+          "exclusive": false,
+          "can_wager": false,
+          "solved": false
+        },
+        {
+          "clue": "A fixture to keep carriage occupants clean",
+          "response": "What is a Dashboard?",
+          "hint": "<img src='board-assets/folklore-3.avif'><span style='display:none'>The front board in a carriage to prevent mud \"dashed\" up by horses from spilling on the passangers. In cars that board got gauges and meters.</span>",
+          "points": 300,
+          "exclusive": false,
+          "can_wager": false,
+          "solved": false
+        },
+        {
+          "clue": "A brand of canned, cooked pork",
+          "response": "What is Spam?",
+          "hint": "<img src='board-assets/folklore-4.png'><span style='display:none'>Spiced Ham. Monty Python, 1970. A cafe that only serves Spam dishes.</span>",
+          "points": 400,
+          "exclusive": false,
+          "can_wager": false,
+          "solved": false
+        },
+        {
+          "clue": "Used to measure speed at sea",
+          "response": "What is a Log?",
+          "hint": "<img src='board-assets/folklore-5.avif'><span style='display:none'>A piece of wood (log) attached to a line with knots. Tossed over board, the knots are counted in a set time frame. Distance of the rope over time gives speed. The speed was tracked in a book, the log book.</span>",
+          "points": 500,
+          "exclusive": false,
+          "can_wager": false,
+          "solved": false
+        }
+      ]
+    },
+    {
+      "title": "UNIX Signals",
+      "clues": [
+        {
+          "clue": "9, a sysadmin's last resort",
+          "response": "What is SIGKILL?",
+          "hint": "",
+          "points": 100,
+          "exclusive": false,
+          "can_wager": false,
+          "solved": false
+        },
+        {
+          "clue": "10, the first signal with program-specific meaning",
+          "response": "What is SIGUSR1?",
+          "hint": "12: SIGUSR2",
+          "points": 200,
+          "exclusive": false,
+          "can_wager": false,
+          "solved": false
+        },
+        {
+          "clue": "1, signalling the disconnection of a serial line / modem, contemporarily sent when closing a terminal window or to request a config reload",
+          "response": "What is SIGHUP?",
+          "hint": "from 'hang up', avoid via `nohup` utility",
+          "points": 300,
+          "exclusive": false,
+          "can_wager": false,
+          "solved": false
+        },
+        {
+          "clue": "15, like 9, but nice",
+          "response": "What is SIGTERM?",
+          "hint": "",
+          "points": 400,
+          "exclusive": false,
+          "can_wager": false,
+          "solved": false
+        },
+        {
+          "clue": "2, issued by ctrl+c, signaling a user's request to stop a program",
+          "response": "What is SIGINT?",
+          "hint": "",
+          "points": 500,
+          "exclusive": false,
+          "can_wager": false,
+          "solved": false
+        }
+      ]
+    }
+  ]
+}
